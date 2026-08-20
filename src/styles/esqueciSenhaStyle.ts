@@ -1,32 +1,32 @@
-import { StyleSheet, TextInput } from "react-native";
+import { StyleSheet } from "react-native";
 
-const LoginStyle = StyleSheet.create({
+const esqueciSenhaStyle = StyleSheet.create({
   conteudo: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     paddingTop: 30,
   },
-  logo: {
-    width: 195,
-    height: 180,
-  },
 
   titulo: {
     marginTop: 30,
-    fontSize: 40,
+    fontSize: 30,
     fontWeight: "bold",
     color: "#000000",
     textAlign: "center",
   },
+
   subtitulo: {
     marginTop: 10,
-    fontSize: 20,
+    fontSize: 16,
     color: "#888888",
+    textAlign: "center",
+    paddingHorizontal: "10%",
   },
+
   form: {
     width: "100%",
-    marginTop: 20,
+    marginTop: 50,
     alignItems: "center",
     paddingHorizontal: "5%",
   },
@@ -53,66 +53,27 @@ const LoginStyle = StyleSheet.create({
     width: "100%",
   },
 
-  btnMostrarSenha: {
-    justifyContent: "center",
-  },
-
-  mostrarSenha: {
-    width: 20,
-    height: 20,
-    marginVertical: 5,
-  },
-
-  btnEsqueciSenha: {
-    alignSelf: "flex-end",
-  },
-
-  txtEsqueciSenha: {
-    fontSize: 12,
-    color: "#ff9800",
-    textDecorationLine: "underline",
-  },
-
-  btnEntrar: {
+  btnEnviar: {
     width: "80%",
     height: 50,
     backgroundColor: "#ff9800",
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 10,
-    marginTop: 20,
+    marginTop: 50,
   },
 
-  txtEntrar: {
+  txtEnviar: {
     color: "#000000",
-    fontSize: 25,
+    fontSize: 22,
     fontWeight: "bold",
   },
 
-  btnEntrarPressed: {
+  btnEnviarPressed: {
     opacity: 0.8,
   },
 
-  Separador: {
-    width: "80%",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginVertical: 10,
-  },
-
-  linha: {
-    flex: 1,
-    height: 2,
-    backgroundColor: "#ff9800",
-  },
-
-  textoSeparador: {
-    fontSize: 15,
-    color: "#888888",
-  },
-
-  btnCriarConta: {
+  btnVoltar: {
     width: "80%",
     height: 50,
     backgroundColor: "#FFE8C5",
@@ -121,17 +82,18 @@ const LoginStyle = StyleSheet.create({
     borderRadius: 10,
     borderColor: "#ff9800",
     borderWidth: 2,
+    marginTop: 15,
   },
 
-  txtCriarConta: {
+  txtVoltar: {
     color: "#000000",
-    fontSize: 25,
+    fontSize: 22,
     fontWeight: "bold",
   },
 
-  btnCriarContaPressed: {
+  btnVoltarPressed: {
     backgroundColor: "#ff9800",
   },
 });
 
-export default LoginStyle;
+export default esqueciSenhaStyle;

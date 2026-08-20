@@ -30,7 +30,7 @@ const globalStyle = StyleSheet.create({
 
   areaConteudo: {
     flex: 1,
-    paddingTop: 30,
+   
   },
 
   scrollConteudo: {

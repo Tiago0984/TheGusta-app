@@ -81,7 +81,10 @@ export default function LoginScreen() {
                   </Pressable>
                 </View>
 
-                <Pressable style={LoginStyle.btnEsqueciSenha}>
+                <Pressable
+                  style={LoginStyle.btnEsqueciSenha}
+                  onPress={() => router.navigate("/esqueci-senha")}
+                >
                   <Text style={LoginStyle.txtEsqueciSenha}>
                     Esqueci minha senha
                   </Text>

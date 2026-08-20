@@ -16,10 +16,14 @@ import {
 import cadClienteStyle from "@/styles/cadClienteStyle";
 import globalStyle from "@/styles/globalStyle";
 
+import TermosUsoModal from "@/components/termosUsoModal";
+
 export default function CadClienteScreen() {
   const [verSenha, setVerSenha] = useState(false);
   const [verConfirmarSenha, setVerConfirmarSenha] = useState(false);
   const [AceitarTermos, setVerAceitarTermos] = useState(false);
+
+  const [modalTermosUso, setModalTermosUso] = useState(false);
 
   return (
     <View style={globalStyle.container}>
@@ -162,7 +166,7 @@ export default function CadClienteScreen() {
                   >
                     Aceito os{" "}
                   </Text>
-                  <Pressable>
+                  <Pressable onPress={() => setModalTermosUso(true)}>
                     <Text style={cadClienteStyle.linkTermos}>
                       Termos de uso
                     </Text>
@@ -196,6 +200,12 @@ export default function CadClienteScreen() {
               </View>
             </View>
           </ScrollView>
+
+          <TermosUsoModal
+          visible={modalTermosUso}
+          onClose={() => setModalTermosUso(false)}          
+          />
+
         </SafeAreaView>
       </ImageBackground>
     </View>
