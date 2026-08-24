@@ -1,5 +1,8 @@
 import { StyleSheet } from "react-native";
 
+import { cores } from "./variaveis";
+import { fontes } from "./variaveis";
+
 const esqueciSenhaStyle = StyleSheet.create({
   conteudo: {
     flex: 1,
@@ -12,14 +15,14 @@ const esqueciSenhaStyle = StyleSheet.create({
     marginTop: 30,
     fontSize: 30,
     fontWeight: "bold",
-    color: "#000000",
+    color: cores.preto,
     textAlign: "center",
   },
 
   subtitulo: {
     marginTop: 10,
     fontSize: 16,
-    color: "#888888",
+    color: cores.cinza,
     textAlign: "center",
     paddingHorizontal: "10%",
   },
@@ -34,7 +37,7 @@ const esqueciSenhaStyle = StyleSheet.create({
   input: {
     height: 50,
     flexDirection: "row",
-    borderColor: "#ff9800",
+    borderColor: cores.laranja,
     borderWidth: 2,
     borderRadius: 10,
     padding: 10,
@@ -56,7 +59,7 @@ const esqueciSenhaStyle = StyleSheet.create({
   btnEnviar: {
     width: "80%",
     height: 50,
-    backgroundColor: "#ff9800",
+    backgroundColor: cores.laranja,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 10,
@@ -64,7 +67,7 @@ const esqueciSenhaStyle = StyleSheet.create({
   },
 
   txtEnviar: {
-    color: "#000000",
+    color: cores.preto,
     fontSize: 22,
     fontWeight: "bold",
   },
@@ -76,23 +79,23 @@ const esqueciSenhaStyle = StyleSheet.create({
   btnVoltar: {
     width: "80%",
     height: 50,
-    backgroundColor: "#FFE8C5",
+    backgroundColor: cores.laranjaclaro,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 10,
-    borderColor: "#ff9800",
+    borderColor: cores.laranja,
     borderWidth: 2,
     marginTop: 15,
   },
 
   txtVoltar: {
-    color: "#000000",
+    color: cores.preto,
     fontSize: 22,
     fontWeight: "bold",
   },
 
   btnVoltarPressed: {
-    backgroundColor: "#ff9800",
+    backgroundColor: cores.laranja,
   },
 });
 

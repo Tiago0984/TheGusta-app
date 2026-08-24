@@ -1,10 +1,13 @@
 import { StyleSheet } from "react-native";
 
+import { cores } from "./variaveis";
+import { fontes } from "./variaveis";
+
 const globalStyle = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: cores.branco,
   },
   
   background: {

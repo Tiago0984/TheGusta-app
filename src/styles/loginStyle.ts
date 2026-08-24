@@ -1,5 +1,8 @@
 import { StyleSheet, TextInput } from "react-native";
 
+import { cores } from "./variaveis";
+import { fontes } from "./variaveis";
+
 const LoginStyle = StyleSheet.create({
   conteudo: {
     flex: 1,
@@ -16,13 +19,13 @@ const LoginStyle = StyleSheet.create({
     marginTop: 30,
     fontSize: 40,
     fontWeight: "bold",
-    color: "#000000",
+    color: cores.preto,
     textAlign: "center",
   },
   subtitulo: {
     marginTop: 10,
     fontSize: 20,
-    color: "#888888",
+    color: cores.cinza,
   },
   form: {
     width: "100%",
@@ -34,7 +37,7 @@ const LoginStyle = StyleSheet.create({
   input: {
     height: 50,
     flexDirection: "row",
-    borderColor: "#ff9800",
+    borderColor: cores.laranja,
     borderWidth: 2,
     borderRadius: 10,
     padding: 10,
@@ -69,14 +72,14 @@ const LoginStyle = StyleSheet.create({
 
   txtEsqueciSenha: {
     fontSize: 12,
-    color: "#ff9800",
+    color: cores.laranja,
     textDecorationLine: "underline",
   },
 
   btnEntrar: {
     width: "80%",
     height: 50,
-    backgroundColor: "#ff9800",
+    backgroundColor: cores.laranja,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 10,
@@ -84,7 +87,7 @@ const LoginStyle = StyleSheet.create({
   },
 
   txtEntrar: {
-    color: "#000000",
+    color: cores.preto,
     fontSize: 25,
     fontWeight: "bold",
   },
@@ -104,33 +107,33 @@ const LoginStyle = StyleSheet.create({
   linha: {
     flex: 1,
     height: 2,
-    backgroundColor: "#ff9800",
+    backgroundColor: cores.laranja,
   },
 
   textoSeparador: {
     fontSize: 15,
-    color: "#888888",
+    color: cores.cinza,
   },
 
   btnCriarConta: {
     width: "80%",
     height: 50,
-    backgroundColor: "#FFE8C5",
+    backgroundColor: cores.laranjaclaro,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 10,
-    borderColor: "#ff9800",
+    borderColor: cores.laranja,
     borderWidth: 2,
   },
 
   txtCriarConta: {
-    color: "#000000",
+    color: cores.preto,
     fontSize: 25,
     fontWeight: "bold",
   },
 
   btnCriarContaPressed: {
-    backgroundColor: "#ff9800",
+    backgroundColor: cores.laranja,
   },
 });
 

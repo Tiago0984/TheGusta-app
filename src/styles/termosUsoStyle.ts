@@ -1,9 +1,12 @@
 import { StyleSheet } from "react-native";
 
+import { cores } from "./variaveis";
+import { fontes } from "./variaveis";
+
 const termosUsoStyle = StyleSheet.create({
   sobrepor: {
     flex: 1,
-    backgroundColor: "#00000080",
+    backgroundColor: cores.preto80,
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
@@ -12,13 +15,13 @@ const termosUsoStyle = StyleSheet.create({
   conteudo: {
     width: "100%",
     height: "85%",
-    backgroundColor: "#ffff",
+    backgroundColor: cores.branco,
     borderRadius: 20,
     alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 24,
     paddingBottom: 20,
-    shadowColor: "#000000",
+    shadowColor: cores.preto,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 10,
@@ -29,7 +32,7 @@ const termosUsoStyle = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
-    color: "#000000",
+    color: cores.preto,
     marginBottom: 12,
   },
 
@@ -40,14 +43,14 @@ const termosUsoStyle = StyleSheet.create({
 
   subtitulo:{
     fontSize: 18,
-    color: "#ff9800",
+    color: cores.laranja,
     marginTop: 12,
     marginBottom: 4,
   },
 
   texto:{
     fontSize: 15,
-    color: "#888888",
+    color: cores.cinza,
     lineHeight: 20,
     textAlign: "justify",
   },
@@ -57,14 +60,14 @@ const termosUsoStyle = StyleSheet.create({
     height: 50,
     marginTop: 16,
     padding: 10,
-    backgroundColor: "#ff9800",
+    backgroundColor: cores.laranja,
     borderRadius: 10,
     justifyContent: "center",
     alignItems: "center"
   },
 
   txtEntendi: {
-    color: "#000000",
+    color: cores.preto,
     fontSize: 15,
     fontWeight: "bold",
   },
