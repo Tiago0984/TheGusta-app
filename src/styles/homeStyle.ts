@@ -124,6 +124,118 @@ const homeStyle = StyleSheet.create({
     fontFamily: fontes.comum,
     color: cores.cinza,
   },
+
+  destaque: {
+    width: "100%",
+    marginTop: 30,
+  },
+
+  conteudoDestaque: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  },
+
+  itemDestaque: {
+    width: 110,
+    height: 155,
+    borderRadius: 10,
+    borderColor: cores.laranja,
+    borderWidth: 2,
+    marginRight: 10,
+    backgroundColor: cores.laranjaclaro,
+    overflow: "hidden",
+  },
+
+  caixaImagem: {
+    width: "100%",
+    height: 70,
+    position: "relative",
+  },
+
+  infoDestaque: {
+    width: "100%",
+    paddingHorizontal: 5,
+    paddingBottom: 5,
+  },
+
+  imgDestaque: {
+    width: "100%",
+    height: "100%",
+  },
+
+  btnFavorito: {
+    position: "absolute",
+    top: 5,
+    right: 5,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: cores.branco,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  txtFavorito: {
+    width: 25,
+    height: 25,
+    fontSize: 20,
+    lineHeight: 20,
+    textAlign: "center",
+    textAlignVertical: "center",
+    color: cores.laranja,
+    marginBottom: 4
+  },
+
+  txtDestaque: {
+    width: "100%",
+    fontSize: 12,
+    fontFamily: fontes.negrito,
+    color: cores.preto,
+    textAlign: "center",
+    marginTop: 5,
+  },
+
+  txtDescricao: {
+    fontSize: 10,
+    fontFamily: fontes.comum,
+    color: cores.cinza,
+    marginTop: 2,
+    textAlign: 'center'
+  },
+
+  rodapeDestaque: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    height: 20,
+    marginTop: 5,
+  },
+
+  precoDestaque: {
+    fontSize: 12,
+    fontFamily: fontes.negrito,
+    color: cores.preto,
+    lineHeight: 15,
+    marginLeft: 20,
+  },
+
+  btnDetalhes: {
+    width: 15,
+    height: 15,
+    borderRadius: 4,
+    borderColor: cores.laranja,
+    borderWidth: 1,
+    backgroundColor: cores.laranjaclaro,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  imgDetalhes: {
+    width: "100%",
+    height: "100%",
+  },
 });
 
 export default homeStyle;

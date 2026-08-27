@@ -14,6 +14,14 @@ import globalStyle from "@/styles/globalStyle";
 import homeStyle from "@/styles/homeStyle";
 import { cores } from "@/styles/variaveis";
 export default function HomeScreen() {
+  const [favoritos, setFavoritos] = useState([false, false, false]);
+
+  function alternarFavorito(indice: number) {
+    setFavoritos((atual) =>
+      atual.map((valor, i) => (i === indice ? !valor : valor))
+    );
+  }
+
   return (
     <View style={globalStyle.container}>
       <ImageBackground
@@ -95,6 +103,111 @@ export default function HomeScreen() {
                         <Text style={homeStyle.txtCategoria}>Kits</Text>
                     </View>
                 </View>
+              </View>
+
+              <View style={homeStyle.destaque}>
+                <Text style={homeStyle.tituloSecao}>Destaques</Text>
+                <ScrollView
+                  contentContainerStyle={homeStyle.conteudoDestaque}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                >
+                  <View style={homeStyle.itemDestaque}>
+                    <View style={homeStyle.caixaImagem}>
+                      <Image
+                        style={homeStyle.imgDestaque}
+                        source={require("@/assets/images/img/bolo01.png")}
+                      />
+                      <Pressable
+                        style={homeStyle.btnFavorito}
+                        onPress={() => alternarFavorito(0)}
+                      >
+                        <Text style={homeStyle.txtFavorito}>
+                          {favoritos[0] ? "★" : "☆"}
+                        </Text>
+                      </Pressable>
+                    </View>
+                    <View style={homeStyle.infoDestaque}>
+                      <Text style={homeStyle.txtDestaque}>Bolo de Banana Fit</Text>
+                      <Text style={homeStyle.txtDescricao}>
+                        Banana Prata com {'\n'} canela e gergilim
+                      </Text>
+                      <View style={homeStyle.rodapeDestaque}>
+                        <Text style={homeStyle.precoDestaque}>R$ 75,90</Text>
+                        <Pressable style={homeStyle.btnDetalhes}>
+                          <Image
+                            style={homeStyle.imgDetalhes}
+                            source={require("@/assets/images/img/mais.png")}
+                          />
+                        </Pressable>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View style={homeStyle.itemDestaque}>
+                    <View style={homeStyle.caixaImagem}>
+                      <Image
+                        style={homeStyle.imgDestaque}
+                        source={require("@/assets/images/img/bolo01.png")}
+                      />
+                      <Pressable
+                        style={homeStyle.btnFavorito}
+                        onPress={() => alternarFavorito(1)}
+                      >
+                        <Text style={homeStyle.txtFavorito}>
+                          {favoritos[1] ? "★" : "☆"}
+                        </Text>
+                      </Pressable>
+                    </View>
+                    <View style={homeStyle.infoDestaque}>
+                      <Text style={homeStyle.txtDestaque}>Bolo de Banana Fit</Text>
+                      <Text style={homeStyle.txtDescricao}>
+                        Banana Prata com {'\n'} canela e gergilim
+                      </Text>
+                      <View style={homeStyle.rodapeDestaque}>
+                        <Text style={homeStyle.precoDestaque}>R$ 75,90</Text>
+                        <Pressable style={homeStyle.btnDetalhes}>
+                          <Image
+                            style={homeStyle.imgDetalhes}
+                            source={require("@/assets/images/img/mais.png")}
+                          />
+                        </Pressable>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View style={homeStyle.itemDestaque}>
+                    <View style={homeStyle.caixaImagem}>
+                      <Image
+                        style={homeStyle.imgDestaque}
+                        source={require("@/assets/images/img/bolo01.png")}
+                      />
+                      <Pressable
+                        style={homeStyle.btnFavorito}
+                        onPress={() => alternarFavorito(2)}
+                      >
+                        <Text style={homeStyle.txtFavorito}>
+                          {favoritos[2] ? "★" : "☆"}
+                        </Text>
+                      </Pressable>
+                    </View>
+                    <View style={homeStyle.infoDestaque}>
+                      <Text style={homeStyle.txtDestaque}>Bolo de Banana Fit</Text>
+                      <Text style={homeStyle.txtDescricao}>
+                        Banana Prata com {'\n'} canela e gergilim
+                      </Text>
+                      <View style={homeStyle.rodapeDestaque}>
+                        <Text style={homeStyle.precoDestaque}>R$ 75,90</Text>
+                        <Pressable style={homeStyle.btnDetalhes}>
+                          <Image
+                            style={homeStyle.imgDetalhes}
+                            source={require("@/assets/images/img/mais.png")}
+                          />
+                        </Pressable>
+                      </View>
+                    </View>
+                  </View>
+                </ScrollView>
               </View>
 
             </View>
