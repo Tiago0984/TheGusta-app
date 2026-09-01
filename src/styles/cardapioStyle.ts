@@ -3,39 +3,35 @@ import { StyleSheet } from "react-native";
 import { cores } from "./variaveis";
 import { fontes } from "./variaveis";
 
-const homeStyle = StyleSheet.create({
+const cardapioStyle = StyleSheet.create({
+  conteudo: {
+    marginTop: 60,
+    marginBottom: 30,
+  },
+
   header: {
     width: "80%",
     margin: "auto",
-    marginTop: 80,
-  },
-
-  conteudo: {
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    flexDirection: "row",
-    width: "100%",
+  },
+
+  ladoEsquerdo: {
+    flexShrink: 1,
   },
 
   titulo: {
     fontSize: 30,
     fontWeight: "bold",
     color: cores.preto,
-    textAlign: "left",
     fontFamily: fontes.negrito,
+    marginTop: 65,
   },
 
-  bordaPerfil: {
-    padding: 15,
-    borderColor: cores.laranja,
-    borderRadius: "50%",
-    borderWidth: 2,
-    backgroundColor: cores.laranjaclaro,
-  },
-
-  perfil: {
-    width: 50,
-    height: 50,
+  logo: {
+    width: 80,
+    height: 75,
   },
 
   subtitulo: {
@@ -78,28 +74,11 @@ const homeStyle = StyleSheet.create({
     height: "100%",
   },
 
-  banner: {
-    width: "100%",
-    height: 160,
-    borderRadius: 30,
-    marginTop: 30,
-  },
-
-  categoria: {
-    width: "100%",
-    marginTop: 30,
-  },
-
-  tituloSecao: {
-    fontSize: 30,
-    fontFamily: fontes.negrito,
-    marginBottom: 10,
-  },
-
   conteudoCategoria: {
     width: "100%",
     flexDirection: "row",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
+    marginTop: 30,
   },
 
   itemCategoria: {
@@ -125,31 +104,37 @@ const homeStyle = StyleSheet.create({
     color: cores.cinza,
   },
 
-  destaque: {
+  categorias: {
     width: "100%",
     marginTop: 30,
   },
 
-  conteudoDestaque: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-between'
+  tituloCategoria: {
+    fontSize: 30,
+    fontFamily: fontes.negrito,
+    marginBottom: 10,
   },
 
-  itemDestaque: {
-    width: 110,
-    height: 155,
+  produtos: {
+    width: "100%",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    rowGap: 15,
+  },
+
+ itemProduto: {
+    width: '48%',
     borderRadius: 10,
     borderColor: cores.laranja,
     borderWidth: 2,
-    marginRight: 10,
-    backgroundColor: cores.laranjaclaro,
+    backgroundColor: cores.branco,
     overflow: "hidden",
   },
 
   caixaImagem: {
     width: "100%",
-    height: 70,
+    height: 100,
     position: "relative",
   },
 
@@ -216,9 +201,9 @@ const homeStyle = StyleSheet.create({
   precoDestaque: {
     fontSize: 12,
     fontFamily: fontes.negrito,
-    color: cores.preto,
+    color: cores.laranja,
     lineHeight: 15,
-    marginLeft: 20,
+    marginLeft: 10,
   },
 
   btnDetalhes: {
@@ -239,4 +224,4 @@ const homeStyle = StyleSheet.create({
 
 });
 
-export default homeStyle;
+export default cardapioStyle;

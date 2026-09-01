@@ -13,6 +13,7 @@ import {
 import globalStyle from "@/styles/globalStyle";
 import homeStyle from "@/styles/homeStyle";
 import { cores } from "@/styles/variaveis";
+import FooterScreen from "@/app/footer";
 export default function HomeScreen() {
   const [favoritos, setFavoritos] = useState([false, false, false]);
 
@@ -209,9 +210,9 @@ export default function HomeScreen() {
                   </View>
                 </ScrollView>
               </View>
-
             </View>
           </ScrollView>
+          <FooterScreen/>
         </SafeAreaView>
       </ImageBackground>
     </View>
