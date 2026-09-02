@@ -104,7 +104,8 @@ const detalheProdutoStyle = StyleSheet.create({
   linhaQtdeSubtotal: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: -10,
+    width: "100%",
+    justifyContent: "space-between",
   },
 
   caixaQtde: {
@@ -112,7 +113,7 @@ const detalheProdutoStyle = StyleSheet.create({
     width: 120,
     height: 50,
     borderRadius: 15,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: cores.laranja,
     paddingHorizontal: 12,
     alignItems: "center",
@@ -141,12 +142,9 @@ const detalheProdutoStyle = StyleSheet.create({
 
   caixaSubtotal: {
     flex: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: "column",
     alignItems: "center",
     marginLeft: 20,
-    marginTop: -16,
-
   },
 
   txtSubtotal: {
@@ -169,8 +167,8 @@ const detalheProdutoStyle = StyleSheet.create({
     backgroundColor: cores.laranja,
     alignItems: "center",
     justifyContent: "center",
-    alignSelf: "flex-end",
-  
+    alignSelf: "center",
+    marginTop: 15,
   },
 
   txtSacola: {

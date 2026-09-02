@@ -1,14 +1,9 @@
-import { ReactNode } from "react";
-import { ImageBackground, ScrollView, View } from "react-native";
+import { ImageBackground, ScrollView, View, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import globalStyle from "@/styles/globalStyle";
 import FooterScreen from "@/app/footer";
 
-interface BaseProps {
-  children: ReactNode;
-}
-
-export default function Base({ children }: BaseProps) {
+export default function Base() {
   return (
     <View style={globalStyle.container}>
       <ImageBackground
@@ -18,7 +13,7 @@ export default function Base({ children }: BaseProps) {
       >
         <SafeAreaView style={globalStyle.areaConteudo}>
           <ScrollView style={globalStyle.scrollConteudo}>
-            {children}
+            {/* conteúdo da tela aqui */}
           </ScrollView>
           <FooterScreen />
         </SafeAreaView>

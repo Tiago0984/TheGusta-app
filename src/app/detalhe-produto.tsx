@@ -105,6 +105,7 @@ export default function DetalheProdutoScreen() {
                       <Text style={detalheProdutoStyle.valorSubtotal}>R$ 151,80</Text>
                     </View>
                   </View>
+
                   <Pressable style={detalheProdutoStyle.btnSubtotal}>
                     <Text style={detalheProdutoStyle.txtSacola}>Adicionar à Sacola</Text>
                   </Pressable>
