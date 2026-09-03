@@ -1,10 +1,10 @@
-import { Image, ImageBackground, Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import FooterScreen from "@/app/footer";
 import globalStyle from "@/styles/globalStyle";
 import sacolaStyle from "@/styles/sacolaStyle";
 import { cores } from "@/styles/variaveis";
-import FooterScreen from "@/app/footer";
+import { router } from "expo-router";
+import { Image, ImageBackground, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SacolaScreen() {
   return (
@@ -182,16 +182,18 @@ export default function SacolaScreen() {
                     <Image
                         style={sacolaStyle.imgEndereco}
                         source={require('@/assets/images/img/delivery-laranja.png')}
+                        resizeMode="stretch"
                     />
-                    <View style={sacolaStyle.infoEndereço}>
+                    <View style={sacolaStyle.infoEndereco}>
                         <Text style={sacolaStyle.tituloEndereco}>Entrega em:</Text>
                         <Text style={sacolaStyle.endereçoCompleto}>
-                        Avenida Marechal Tito, 1500 - São Miguel Paulista - São Paulo - SP</Text>
+                        Avenida Marechal Tito, 1500 - São Miguel Paulista - São Paulo - SP
+                        </Text>
                         <Text style={sacolaStyle.telefone}>{'('}11{')'} 99999-9999</Text>
                         <View style={sacolaStyle.entrega}>
                             <Text style={sacolaStyle.tituloEntrega}>Entrega estima em:</Text>
                             <Text style={sacolaStyle.tempoEntrega}>40-60 minutos</Text>
-                            <Pressable style={sacolaStyle.btnEndereco}>
+                            <Pressable>
                                 <Text style={sacolaStyle.txtEndereco}>Trocar endereço</Text>
                             </Pressable>
                         </View>
@@ -199,10 +201,34 @@ export default function SacolaScreen() {
                     </View>
                 </View>
 
+                  <View style={sacolaStyle.subtotal}>
+                    <View style={sacolaStyle.areaSubtotal}>
+                        <Text style={sacolaStyle.txtSubtotal}>Subtotal</Text>
+                        <Text style={sacolaStyle.valorSubtotal}>R$ 531,30</Text>
+                    </View>
+
+                    <View style={sacolaStyle.areaEntrega}>
+                      <Text style={sacolaStyle.txtEntrega}>Entrega</Text>
+                      <Text style={sacolaStyle.valorEntrega}>R$ 10,00</Text>
+                    </View>
+
+                    <View style={sacolaStyle.areaDesconto}>
+                      <Text style={sacolaStyle.txtDesconto}>Desconto</Text>
+                      <Text style={sacolaStyle.cupmDesconto}>THEGUSTA10</Text>
+                      <Text style={sacolaStyle.valorDesconto}>- R$ 54,13</Text>
+                    </View>
+                    <View style={globalStyle.separador}></View>
+                    <View style={sacolaStyle.total}>
+                        <Text style={sacolaStyle.txtTotal}>Total</Text>
+                        <Text style={sacolaStyle.valorTotal}>R$ 487,17</Text>
+                    </View>
+                </View>
+                <Pressable style={sacolaStyle.btnPagamento}>
+                  <Text style={sacolaStyle.txtPagamento}>Continuar para pagamento</Text>
+                </Pressable>                    
               </View>
             </View>
           </ScrollView>
-
           <FooterScreen />
         </SafeAreaView>
       </ImageBackground>

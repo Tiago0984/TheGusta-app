@@ -203,44 +203,168 @@ const sacolaStyle = StyleSheet.create({
   },
 
   imgEndereco: {
-
+    width: "15%",
+   
   },
 
-  infoEndereço: {
-
+  infoEndereco: {
+    width: "80%",
   },
 
   tituloEndereco: {
-
+    fontFamily: fontes.negrito,
+    color: cores.laranja,
+    fontSize: 15,
+    marginBottom: 5,
   },
 
   endereçoCompleto: {
-
+    fontFamily: fontes.comum,
+    color: cores.preto,
+    fontSize: 10,
+    marginBottom: 5,
   },
 
   telefone: {
-
+    fontFamily: fontes.comum,
+    color: cores.preto,
+    fontSize: 10,
+    marginBottom: 5,
   },
 
   entrega: {
-
+    flexDirection: "row",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
   },
 
   tituloEntrega: {
-
+    fontFamily: fontes.comum,
+    color: cores.cinza,
+    fontSize: 10,
   },
 
   tempoEntrega: {
-
-  },
-
-  btnEndereco: {
-
+    fontFamily: fontes.negrito,
+    color: cores.preto,
+    fontSize: 10,
   },
 
   txtEndereco: {
-    
+    fontFamily: fontes.negrito,
+    color: cores.laranja,
+    fontSize: 11,
+    textDecorationLine: "underline",
+    textDecorationColor: cores.laranja,
   },
+  
+  subtotal: {
+    width: "100%",
+    backgroundColor: cores.branco,
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    borderColor: cores.laranja,
+    borderWidth: 2,
+    marginVertical: 5,
+  },
+
+  areaSubtotal: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginVertical: 5,
+  },
+
+
+  txtSubtotal: {
+    fontSize: 10,
+    color: cores.preto,
+    fontFamily: fontes.comum,
+  },
+
+  valorSubtotal: {
+    fontSize: 10,
+    color: cores.preto,
+    fontFamily: fontes.negrito,
+  },
+
+  areaEntrega: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginVertical: 5,
+  },
+
+  txtEntrega: {
+    fontSize: 10,
+    color: cores.preto,
+    fontFamily: fontes.comum,
+  },
+
+  valorEntrega: {
+    fontSize: 10,
+    color: cores.preto,
+    fontFamily: fontes.negrito,
+  },
+
+  areaDesconto: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginVertical: 5,
+  },
+
+  txtDesconto: {
+    fontSize: 10,
+    color: cores.verde,
+    fontFamily: fontes.comum,
+  },
+
+  cupmDesconto: {
+    fontSize: 10,
+    color: cores.verde,
+    fontFamily: fontes.negrito,
+  },
+
+  valorDesconto: {
+    fontSize: 11,
+    color: cores.verde,
+    fontFamily: fontes.negrito,
+  },
+
+  
+  total: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
+  txtTotal: {
+    fontSize: 10,
+    color: cores.preto,
+    fontFamily: fontes.negrito,
+  },
+
+  valorTotal: {
+    fontSize: 11,
+    color: cores.laranja,
+    fontFamily: fontes.negrito,
+  },
+
+  btnPagamento: {
+    width: "100%",
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: cores.laranja,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
+  },
+
+  txtPagamento: {
+    fontSize: 15,
+    color: cores.preto,
+    fontFamily: fontes.negrito,
+  },  
 });
 
 export default sacolaStyle;

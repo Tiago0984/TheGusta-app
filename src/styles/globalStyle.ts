@@ -40,6 +40,14 @@ const globalStyle = StyleSheet.create({
     flexGrow: 1,
   },
 
+  separador: {
+    backgroundColor: cores.laranja,
+    height: 2,
+    width: "100%",
+    marginVertical: 5,
+  },
+
+
   footer: {
     width: "100%",
     flexDirection: "row",
