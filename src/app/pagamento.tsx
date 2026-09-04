@@ -4,12 +4,103 @@ import pagamentoStyle from "@/styles/pagamentoStyle";
 import { cores } from "@/styles/variaveis";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Image, ImageBackground, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Image, ImageBackground, Linking, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const ENDERECO_ENTREGA = {
+  rotulo: "Casa",
+  logradouro: "Avenida Marechal Tito, 1500",
+  bairroCidade: "São Miguel Paulista - São Paulo - SP",
+  telefone: "(11) 99999-9999",
+};
+
+const RESUMO_TOTAIS = {
+  subtotal: "R$ 531,30",
+  entrega: "R$ 10,00",
+  cupom: "THEGUSTA10",
+  desconto: "- R$ 54,13",
+  total: "R$ 487,17",
+};
+
+const ENTREGA_LABEL: Record<"entrega" | "retirada", string> = {
+  entrega: "Entrega",
+  retirada: "Retirada",
+};
+
+const PAGAMENTO_LABEL: Record<"pix" | "cartao" | "dinheiro", string> = {
+  pix: "Pix",
+  cartao: "Cartão",
+  dinheiro: "Dinheiro",
+};
+
 export default function PagamentoScreen() {
+
+  const itensResumo = [
+    {
+      id: 1,
+      quantidade: 2,
+      nome: "Bolo de Banana Fit",
+      valor: "R$ 37,60",
+      imagem: require("@/assets/images/img/bolo01.png"),
+    },
+    {
+      id: 2,
+      quantidade: 3,
+      nome: "Bolo de Banana Fit",
+      valor: "R$ 56,40",
+      imagem: require("@/assets/images/img/bolo01.png"),
+    },
+    {
+      id: 3,
+      quantidade: 2,
+      nome: "Bolo de Banana Fit",
+      valor: "R$ 37,60",
+      imagem: require("@/assets/images/img/bolo01.png"),
+    },
+
+  ];
   const [entrega, setEntrega] = useState<"entrega" | "retirada">("entrega");
   const [pagamento, setPagamento] = useState<"pix" | "cartao" | "dinheiro">("pix");
+  const [observacao, setObservacao] = useState("");
+
+  const confirmarPedido = () => {
+    const telefone = "5511958435174";
+
+    const listaProdutos = itensResumo
+      .map(
+        (item) =>
+          `${item.quantidade}x ${item.nome} - ${item.valor}`
+      )
+      .join("\n");
+
+    const observacaoTexto = observacao.trim().length > 0
+      ? `\n\n📝 *Observação:*\n${observacao.trim()}`
+      : "";
+
+    const mensagem = `
+📦 *NOVO PEDIDO - THE GUSTA*
+
+📋 *Itens do pedido:*
+
+${listaProdutos}
+
+--------------------------
+💰 *Subtotal:* ${RESUMO_TOTAIS.subtotal}
+🚚 *Entrega:* ${RESUMO_TOTAIS.entrega}
+🎟️ *Desconto (${RESUMO_TOTAIS.cupom}):* ${RESUMO_TOTAIS.desconto}
+✅ *Total:* ${RESUMO_TOTAIS.total}
+
+🛵 *Entrega/Retirada:* ${ENTREGA_LABEL[entrega]}
+💳 *Forma de Pagamento:* ${PAGAMENTO_LABEL[pagamento]}
+
+📍 *Endereço (${ENDERECO_ENTREGA.rotulo}):*
+${ENDERECO_ENTREGA.logradouro} - ${ENDERECO_ENTREGA.bairroCidade}
+📞 ${ENDERECO_ENTREGA.telefone}${observacaoTexto}
+`;
+
+    const url = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
+    Linking.openURL(url);
+  };
 
   return (
     <View style={globalStyle.container}>
@@ -62,11 +153,11 @@ export default function PagamentoScreen() {
                         source={require("@/assets/images/img/local.png")}
                       />
                       <View style={pagamentoStyle.enderecoInfo}>
-                        <Text style={pagamentoStyle.rotuloEndereco}>Casa</Text>
+                        <Text style={pagamentoStyle.rotuloEndereco}>{ENDERECO_ENTREGA.rotulo}</Text>
                         <Text style={pagamentoStyle.enderecoCompleto}>
-                          Avenida Marechal Tito, 1500{"\n"}São Miguel Paulista - São Paulo - SP
+                          {ENDERECO_ENTREGA.logradouro}{"\n"}{ENDERECO_ENTREGA.bairroCidade}
                         </Text>
-                        <Text style={pagamentoStyle.telefone}>{"("}11{")"} 99999-9999</Text>
+                        <Text style={pagamentoStyle.telefone}>{ENDERECO_ENTREGA.telefone}</Text>
                       </View>
                     </View>
                     <Pressable>
@@ -207,6 +298,8 @@ export default function PagamentoScreen() {
                       style={pagamentoStyle.inputObservacao}
                       placeholder="Alguma observação para o seu pedido"
                       placeholderTextColor={cores.cinza}
+                      value={observacao}
+                      onChangeText={setObservacao}
                       multiline
                     />
                   </View>
@@ -221,65 +314,47 @@ export default function PagamentoScreen() {
                     <Text style={pagamentoStyle.txtCardTitulo}>Resumo do pedido</Text>
                   </View>
 
-                  <View style={pagamentoStyle.itemResumo}>
-                    <View style={pagamentoStyle.itemResumoEsquerdo}>
-                      <Image
-                        style={pagamentoStyle.imgItemResumo}
-                        source={require("@/assets/images/img/bolo01.png")}
-                        resizeMode="cover"
-                      />
-                      <Text style={pagamentoStyle.txtItemResumo}>2x Bolo de Banana Fit</Text>
+                  {itensResumo.map((item) => (
+                    <View style={pagamentoStyle.itemResumo} key={item.id}>
+                      <View style={pagamentoStyle.itemResumoEsquerdo}>
+                        <Image
+                          style={pagamentoStyle.imgItemResumo}
+                          source={item.imagem}
+                          resizeMode="cover"
+                        />
+                        <Text style={pagamentoStyle.txtItemResumo}>
+                          {item.quantidade}x {item.nome}
+                        </Text>
+                      </View>
+                      <Text style={pagamentoStyle.valorItemResumo}>{item.valor}</Text>
                     </View>
-                    <Text style={pagamentoStyle.valorItemResumo}>R$ 151,80</Text>
-                  </View>
-                  <View style={pagamentoStyle.itemResumo}>
-                    <View style={pagamentoStyle.itemResumoEsquerdo}>
-                      <Image
-                        style={pagamentoStyle.imgItemResumo}
-                        source={require("@/assets/images/img/bolo01.png")}
-                        resizeMode="cover"
-                      />
-                      <Text style={pagamentoStyle.txtItemResumo}>3x Bolo de Banana Fit</Text>
-                    </View>
-                    <Text style={pagamentoStyle.valorItemResumo}>R$ 227,70</Text>
-                  </View>
-                  <View style={pagamentoStyle.itemResumo}>
-                    <View style={pagamentoStyle.itemResumoEsquerdo}>
-                      <Image
-                        style={pagamentoStyle.imgItemResumo}
-                        source={require("@/assets/images/img/bolo01.png")}
-                        resizeMode="cover"
-                      />
-                      <Text style={pagamentoStyle.txtItemResumo}>2x Bolo de Banana Fit</Text>
-                    </View>
-                    <Text style={pagamentoStyle.valorItemResumo}>R$ 151,80</Text>
-                  </View>
+                  ))}
 
                   <View style={globalStyle.separador}></View>
 
                   <View style={pagamentoStyle.areaSubtotal}>
                     <Text style={pagamentoStyle.txtSubtotal}>Subtotal</Text>
-                    <Text style={pagamentoStyle.valorSubtotal}>R$ 531,30</Text>
+                    <Text style={pagamentoStyle.valorSubtotal}>{RESUMO_TOTAIS.subtotal}</Text>
                   </View>
                   <View style={pagamentoStyle.areaEntrega}>
                     <Text style={pagamentoStyle.txtEntrega}>Entrega</Text>
-                    <Text style={pagamentoStyle.valorEntrega}>R$ 10,00</Text>
+                    <Text style={pagamentoStyle.valorEntrega}>{RESUMO_TOTAIS.entrega}</Text>
                   </View>
                   <View style={pagamentoStyle.areaDesconto}>
                     <Text style={pagamentoStyle.txtDesconto}>Desconto</Text>
-                    <Text style={pagamentoStyle.cupmDesconto}>THEGUSTA10</Text>
-                    <Text style={pagamentoStyle.valorDesconto}>- R$ 54,13</Text>
+                    <Text style={pagamentoStyle.cupmDesconto}>{RESUMO_TOTAIS.cupom}</Text>
+                    <Text style={pagamentoStyle.valorDesconto}>{RESUMO_TOTAIS.desconto}</Text>
                   </View>
 
                   <View style={globalStyle.separador}></View>
 
                   <View style={pagamentoStyle.total}>
                     <Text style={pagamentoStyle.txtTotal}>Total</Text>
-                    <Text style={pagamentoStyle.valorTotal}>R$ 487,17</Text>
+                    <Text style={pagamentoStyle.valorTotal}>{RESUMO_TOTAIS.total}</Text>
                   </View>
                 </View>
 
-                <Pressable style={pagamentoStyle.btnConfirmar}>
+                <Pressable style={pagamentoStyle.btnConfirmar} onPress={confirmarPedido}>
                   <Text style={pagamentoStyle.txtConfirmar}>Confirmar pedido</Text>
                 </Pressable>
 
