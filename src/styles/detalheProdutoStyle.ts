@@ -143,14 +143,15 @@ const detalheProdutoStyle = StyleSheet.create({
   caixaSubtotal: {
     flex: 1,
     flexDirection: "column",
-    alignItems: "center",
+    alignItems: "flex-end",
     marginLeft: 20,
+
   },
 
   txtSubtotal: {
     fontSize: 15,
     color: cores.cinza,
-    
+    alignSelf: "center",
   },
 
   valorSubtotal: {
