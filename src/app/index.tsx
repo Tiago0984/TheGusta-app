@@ -95,6 +95,7 @@ export default function LoginScreen() {
                     LoginStyle.btnEntrar,
                     pressed && LoginStyle.btnEntrarPressed,
                   ]}
+                  onPress={() => router.navigate("/home")}
                 >
                   <Text style={LoginStyle.txtEntrar}>Entrar</Text>
                 </Pressable>

@@ -135,7 +135,10 @@ export default function HomeScreen() {
                       </Text>
                       <View style={homeStyle.rodapeDestaque}>
                         <Text style={homeStyle.precoDestaque}>R$ 75,90</Text>
-                        <Pressable style={homeStyle.btnDetalhes}>
+                        <Pressable
+                          style={homeStyle.btnDetalhes}
+                          onPress={() => router.navigate("/detalhe-produto")}
+                        >
                           <Image
                             style={homeStyle.imgDetalhes}
                             source={require("@/assets/images/img/mais.png")}
@@ -167,7 +170,10 @@ export default function HomeScreen() {
                       </Text>
                       <View style={homeStyle.rodapeDestaque}>
                         <Text style={homeStyle.precoDestaque}>R$ 75,90</Text>
-                        <Pressable style={homeStyle.btnDetalhes}>
+                        <Pressable
+                          style={homeStyle.btnDetalhes}
+                          onPress={() => router.navigate("/detalhe-produto")}
+                        >
                           <Image
                             style={homeStyle.imgDetalhes}
                             source={require("@/assets/images/img/mais.png")}
@@ -199,7 +205,10 @@ export default function HomeScreen() {
                       </Text>
                       <View style={homeStyle.rodapeDestaque}>
                         <Text style={homeStyle.precoDestaque}>R$ 75,90</Text>
-                        <Pressable style={homeStyle.btnDetalhes}>
+                        <Pressable
+                          style={homeStyle.btnDetalhes}
+                          onPress={() => router.navigate("/detalhe-produto")}
+                        >
                           <Image
                             style={homeStyle.imgDetalhes}
                             source={require("@/assets/images/img/mais.png")}

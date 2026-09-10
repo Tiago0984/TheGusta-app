@@ -223,9 +223,12 @@ export default function SacolaScreen() {
                         <Text style={sacolaStyle.valorTotal}>R$ 487,17</Text>
                     </View>
                 </View>
-                <Pressable style={sacolaStyle.btnPagamento}>
+                <Pressable
+                  style={sacolaStyle.btnPagamento}
+                  onPress={() => router.navigate("/pagamento")}
+                >
                   <Text style={sacolaStyle.txtPagamento}>Continuar para pagamento</Text>
-                </Pressable>                    
+                </Pressable>
               </View>
             </View>
           </ScrollView>
