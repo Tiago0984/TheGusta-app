@@ -67,9 +67,19 @@ export default function FooterScreen() {
         </Text>
       </Pressable>
 
-      <Pressable style={globalStyle.btnFooter}>
+      <Pressable
+        style={globalStyle.btnFooter}
+        onPress={() => router.navigate("/configuracao")}
+      >
         <Image source={require("@/assets/images/img/config.png")} />
-        <Text style={globalStyle.txtFooter}>Config</Text>
+        <Text
+          style={[
+            globalStyle.txtFooter,
+            pathname === "/configuracao" && globalStyle.txtFooterAtivo,
+          ]}
+        >
+          Config
+        </Text>
       </Pressable>
     </View>
   );

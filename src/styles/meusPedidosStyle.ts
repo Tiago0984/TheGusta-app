@@ -83,6 +83,12 @@ const meusPedidosStyle = StyleSheet.create({
     fontFamily: fontes.negrito,
   },
 
+  txtCardTituloVerde: {
+    fontSize: 16,
+    color: cores.verde,
+    fontFamily: fontes.negrito,
+  },
+
   txtCardTituloEndereco: {
     fontSize: 16,
     color: cores.laranja,
@@ -403,6 +409,12 @@ const meusPedidosStyle = StyleSheet.create({
     fontFamily: fontes.negrito,
   },
 
+  valorTotalVerde: {
+    fontSize: 15,
+    color: cores.verde,
+    fontFamily: fontes.negrito,
+  },
+
   btnConfirmar: {
     width: "100%",
     height: 40,
@@ -479,9 +491,29 @@ const meusPedidosStyle = StyleSheet.create({
     marginLeft: "auto",
   },
 
+  topoPedidoVerde: {
+    width: 120,
+    height: 25,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    gap: 4,
+    backgroundColor: cores.verdeClaro,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    marginLeft: "auto",
+  },
+
   txtStatus: {
     fontSize: 10,
     color: cores.laranja,
+    fontFamily: fontes.negrito,
+  },
+
+  txtStatusVerde: {
+    fontSize: 10,
+    color: cores.verde,
     fontFamily: fontes.negrito,
   },
 

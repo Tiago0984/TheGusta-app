@@ -117,6 +117,8 @@ export default function MeusPedidosScreen() {
                   </Pressable>
                 </View>
 
+                {filtro === "andamento" && (
+                <>
                 <View style={meusPedidosStyle.card}>
                   <View style={meusPedidosStyle.headerPedido}>
                     <View style={meusPedidosStyle.cardTitulo}>
@@ -361,6 +363,87 @@ export default function MeusPedidosScreen() {
                     </Pressable>
                   </View>
                 </View>
+                </>
+                )}
+
+                {filtro === "entregue" && (
+                <View style={meusPedidosStyle.card}>
+                  <View style={meusPedidosStyle.headerPedido}>
+                    <View style={meusPedidosStyle.cardTitulo}>
+                      <Image
+                        style={meusPedidosStyle.iconTitulo}
+                        source={require("@/assets/images/img/entregue-verde.png")}
+                      />
+                      <Text style={meusPedidosStyle.txtCardTituloVerde}>
+                        Pedido {"#"}999
+                      </Text>
+                    </View>
+                    <View style={meusPedidosStyle.topoPedidoVerde}>
+                      <Image
+                        style={meusPedidosStyle.imgStatus}
+                        source={require("@/assets/images/img/entregue-verde.png")}
+                        resizeMode="stretch"
+                      />
+                      <Text style={meusPedidosStyle.txtStatusVerde}>
+                        Entregue
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={meusPedidosStyle.areaResumo}>
+                    <View style={meusPedidosStyle.listaItensResumo}>
+                      {itensResumo.map((item) => (
+                        <View style={meusPedidosStyle.itemResumo} key={item.id}>
+                          <View style={meusPedidosStyle.itemResumoEsquerdo}>
+                            <Image
+                              style={meusPedidosStyle.imgItemResumo}
+                              source={item.imagem}
+                              resizeMode="cover"
+                            />
+                            <Text style={meusPedidosStyle.txtItemResumo}>
+                              {item.quantidade}x {item.nome}
+                            </Text>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                    <View style={meusPedidosStyle.colunaImgAguardando}>
+                      <Image
+                        style={meusPedidosStyle.imgAguardando}
+                        source={require("@/assets/images/img/entregue-verde.png")}
+                        resizeMode="stretch"
+                      />
+                    </View>
+                  </View>
+
+                  <View style={globalStyle.separador}></View>
+                  <View style={meusPedidosStyle.rodapeResumo}>
+                    <View style={meusPedidosStyle.total}>
+                      <Text style={meusPedidosStyle.txtTotal}>Total</Text>
+                      <Text style={meusPedidosStyle.valorTotalVerde}>
+                        {valorTotal}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={meusPedidosStyle.btnPedido}>
+                    <Pressable
+                      style={[meusPedidosStyle.btnDetalhes, { marginTop: 0 }]}
+                      onPress={() => router.push("/detalhe-pedido")}
+                    >
+                      <Text style={meusPedidosStyle.txtDetalhes}>
+                        Ver detalhes
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      style={meusPedidosStyle.btnRastrear}
+                      onPress={() => router.push("/pagamento")}
+                    >
+                      <Text style={meusPedidosStyle.txtRastrear}>
+                        Pedir novamente
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
+                )}
               </View>
             </View>
           </ScrollView>
