@@ -207,7 +207,10 @@ export default function ConfiguracaoScreen() {
                 </Text>
 
                 <View style={configuracaoStyle.cardConta}>
-                  <Pressable style={configuracaoStyle.itemConta}>
+                  <Pressable
+                    style={configuracaoStyle.itemConta}
+                    onPress={() => router.push("/depoimentos")}
+                  >
                     <View style={configuracaoStyle.itemContaEsquerdo}>
                       <Image
                         style={configuracaoStyle.iconConta}
@@ -227,7 +230,10 @@ export default function ConfiguracaoScreen() {
 
                   <View style={configuracaoStyle.itemContaDivisor} />
 
-                  <Pressable style={configuracaoStyle.itemConta}>
+                  <Pressable
+                    style={configuracaoStyle.itemConta}
+                    onPress={() => router.push("/fale-conosco")}
+                  >
                     <View style={configuracaoStyle.itemContaEsquerdo}>
                       <Image
                         style={configuracaoStyle.iconConta}

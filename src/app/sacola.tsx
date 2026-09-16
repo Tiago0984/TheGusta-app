@@ -193,7 +193,7 @@ export default function SacolaScreen() {
                         <View style={sacolaStyle.entrega}>
                             <Text style={sacolaStyle.tituloEntrega}>Entrega estima em:</Text>
                             <Text style={sacolaStyle.tempoEntrega}>40-60 minutos</Text>
-                            <Pressable>
+                            <Pressable onPress={() => router.push("/enderecos")}>
                                 <Text style={sacolaStyle.txtEndereco}>Trocar endereço</Text>
                             </Pressable>
                         </View>

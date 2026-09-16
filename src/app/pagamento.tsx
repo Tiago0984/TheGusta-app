@@ -160,7 +160,7 @@ ${ENDERECO_ENTREGA.logradouro} - ${ENDERECO_ENTREGA.bairroCidade}
                         <Text style={pagamentoStyle.telefone}>{ENDERECO_ENTREGA.telefone}</Text>
                       </View>
                     </View>
-                    <Pressable>
+                    <Pressable onPress={() => router.push("/enderecos")}>
                       <Text style={pagamentoStyle.txtAlterar}>Alterar {`>`}</Text>
                     </Pressable>
                   </View>
