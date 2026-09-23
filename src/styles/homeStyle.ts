@@ -138,7 +138,7 @@ const homeStyle = StyleSheet.create({
 
   itemDestaque: {
     width: 110,
-    height: 155,
+    minHeight: 155,
     borderRadius: 10,
     borderColor: cores.laranja,
     borderWidth: 2,
@@ -154,6 +154,7 @@ const homeStyle = StyleSheet.create({
   },
 
   infoDestaque: {
+    flex: 1,
     width: "100%",
     paddingHorizontal: 5,
     paddingBottom: 5,
@@ -201,7 +202,8 @@ const homeStyle = StyleSheet.create({
     fontFamily: fontes.comum,
     color: cores.cinza,
     marginTop: 2,
-    textAlign: 'center'
+    textAlign: 'center',
+    overflow: "hidden"
   },
 
   rodapeDestaque: {
@@ -209,8 +211,9 @@ const homeStyle = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    height: 20,
-    marginTop: 5,
+    height: 25,
+    marginTop: "auto",
+    paddingTop: 5,
   },
 
   precoDestaque: {

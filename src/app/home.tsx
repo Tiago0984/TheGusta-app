@@ -23,6 +23,60 @@ export default function HomeScreen() {
     );
   }
 
+  const [produtosDestaque, setProdutosDestaque] = useState([
+    {
+      id: 1,
+      nome: "Bolo de banana fit",
+      descricao: "Banana prata com canela e gergilim da Noruega",
+      categoria: "Bolos",
+      valor: "R$ 75,90",
+      imagem: require("@/assets/images/img/bolo01.png"),
+      status: "ativo",
+      favorito: false,
+    },
+    {
+      id: 2,
+      nome: "Bolo de cenoura",
+      descricao: "Bolo de cenoura com cobertura de chocolate",
+      categoria: "Bolos",
+      valor: "R$ 75,90",
+      imagem: require("@/assets/images/img/bolo01.png"),
+      status: "ativo",
+      favorito: false,
+    },
+    {
+      id: 3,
+      nome: "Brigadeiro Gourmet",
+      descricao: "Brigadeiro de chocolate com cobertura de chantily",
+      categoria: "Doces",
+      valor: "R$ 75,90",
+      imagem: require("@/assets/images/img/bolo01.png"),
+      status: "ativo",
+      favorito: false,
+    },
+    {
+      id: 4,
+      nome: "Bolo de aveia",
+      descricao: "Massa integral de aveia com banana caramelizada e nozes",
+      categoria: "Bolos",
+      valor: "R$ 75,90",
+      imagem: require("@/assets/images/img/bolo01.png"),
+      status: "ativo",
+      favorito: false,
+    },
+
+  ]);
+
+  function alterarFavorito(id: number){
+    setProdutosDestaque((produtoFavorito) =>
+      produtoFavorito.map((produto) =>
+        produto.id === id
+          ? {...produto, favorito: !produto.favorito}
+          : produto,
+      ),
+    );
+  }
+
   return (
     <View style={globalStyle.container}>
       <ImageBackground
@@ -113,28 +167,30 @@ export default function HomeScreen() {
                   horizontal
                   showsHorizontalScrollIndicator={false}
                 >
-                  <View style={homeStyle.itemDestaque}>
+                  {/* CARD QUE IRA SE REPETIR */}
+                  {produtosDestaque.map((produto) => (
+                  <View key={produto.id} style={homeStyle.itemDestaque}>
                     <View style={homeStyle.caixaImagem}>
                       <Image
                         style={homeStyle.imgDestaque}
-                        source={require("@/assets/images/img/bolo01.png")}
+                        source={produto.imagem}
                       />
                       <Pressable
                         style={homeStyle.btnFavorito}
-                        onPress={() => alternarFavorito(0)}
+                        onPress={() => alterarFavorito(produto.id)}
                       >
                         <Text style={homeStyle.txtFavorito}>
-                          {favoritos[0] ? "★" : "☆"}
+                          {produto.favorito ? "★" : "☆"}
                         </Text>
                       </Pressable>
                     </View>
                     <View style={homeStyle.infoDestaque}>
-                      <Text style={homeStyle.txtDestaque}>Bolo de Banana Fit</Text>
+                      <Text style={homeStyle.txtDestaque}>{produto.nome}</Text>
                       <Text style={homeStyle.txtDescricao}>
-                        Banana Prata com {'\n'} canela e gergilim
+                        {produto.descricao}
                       </Text>
                       <View style={homeStyle.rodapeDestaque}>
-                        <Text style={homeStyle.precoDestaque}>R$ 75,90</Text>
+                        <Text style={homeStyle.precoDestaque}>{produto.valor}</Text>
                         <Pressable
                           style={homeStyle.btnDetalhes}
                           onPress={() => router.navigate("/detalhe-produto")}
@@ -147,76 +203,9 @@ export default function HomeScreen() {
                       </View>
                     </View>
                   </View>
+                  ))}
+                   {/* FINAL DO CARD */}
 
-                  <View style={homeStyle.itemDestaque}>
-                    <View style={homeStyle.caixaImagem}>
-                      <Image
-                        style={homeStyle.imgDestaque}
-                        source={require("@/assets/images/img/bolo01.png")}
-                      />
-                      <Pressable
-                        style={homeStyle.btnFavorito}
-                        onPress={() => alternarFavorito(1)}
-                      >
-                        <Text style={homeStyle.txtFavorito}>
-                          {favoritos[1] ? "★" : "☆"}
-                        </Text>
-                      </Pressable>
-                    </View>
-                    <View style={homeStyle.infoDestaque}>
-                      <Text style={homeStyle.txtDestaque}>Bolo de Banana Fit</Text>
-                      <Text style={homeStyle.txtDescricao}>
-                        Banana Prata com {'\n'} canela e gergilim
-                      </Text>
-                      <View style={homeStyle.rodapeDestaque}>
-                        <Text style={homeStyle.precoDestaque}>R$ 75,90</Text>
-                        <Pressable
-                          style={homeStyle.btnDetalhes}
-                          onPress={() => router.navigate("/detalhe-produto")}
-                        >
-                          <Image
-                            style={homeStyle.imgDetalhes}
-                            source={require("@/assets/images/img/mais.png")}
-                          />
-                        </Pressable>
-                      </View>
-                    </View>
-                  </View>
-
-                  <View style={homeStyle.itemDestaque}>
-                    <View style={homeStyle.caixaImagem}>
-                      <Image
-                        style={homeStyle.imgDestaque}
-                        source={require("@/assets/images/img/bolo01.png")}
-                      />
-                      <Pressable
-                        style={homeStyle.btnFavorito}
-                        onPress={() => alternarFavorito(2)}
-                      >
-                        <Text style={homeStyle.txtFavorito}>
-                          {favoritos[2] ? "★" : "☆"}
-                        </Text>
-                      </Pressable>
-                    </View>
-                    <View style={homeStyle.infoDestaque}>
-                      <Text style={homeStyle.txtDestaque}>Bolo de Banana Fit</Text>
-                      <Text style={homeStyle.txtDescricao}>
-                        Banana Prata com {'\n'} canela e gergilim
-                      </Text>
-                      <View style={homeStyle.rodapeDestaque}>
-                        <Text style={homeStyle.precoDestaque}>R$ 75,90</Text>
-                        <Pressable
-                          style={homeStyle.btnDetalhes}
-                          onPress={() => router.navigate("/detalhe-produto")}
-                        >
-                          <Image
-                            style={homeStyle.imgDetalhes}
-                            source={require("@/assets/images/img/mais.png")}
-                          />
-                        </Pressable>
-                      </View>
-                    </View>
-                  </View>
                 </ScrollView>
               </View>
             </View>
