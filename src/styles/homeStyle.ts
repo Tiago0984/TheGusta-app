@@ -128,6 +128,7 @@ const homeStyle = StyleSheet.create({
   destaque: {
     width: "100%",
     marginTop: 30,
+    marginBottom: 20,
   },
 
   conteudoDestaque: {
