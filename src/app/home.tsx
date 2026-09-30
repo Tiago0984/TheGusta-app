@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -14,64 +14,96 @@ import globalStyle from "@/styles/globalStyle";
 import homeStyle from "@/styles/homeStyle";
 import { cores } from "@/styles/variaveis";
 import FooterScreen from "@/app/footer";
+
+const SERVIDOR = "http://localhost:8081";
+const API = `${SERVIDOR}/api/v1`;
+const IMAGEM = `${SERVIDOR}/davilla/images`;
+
 export default function HomeScreen() {
   const [favoritos, setFavoritos] = useState([false, false, false]);
 
   function alternarFavorito(indice: number) {
     setFavoritos((atual) =>
-      atual.map((valor, i) => (i === indice ? !valor : valor))
+      atual.map((valor, i) => (i === indice ? !valor : valor)),
     );
   }
 
-  const [produtosDestaque, setProdutosDestaque] = useState([
-    {
-      id: 1,
-      nome: "Bolo de banana fit",
-      descricao: "Banana prata com canela e gergilim da Noruega",
-      categoria: "Bolos",
-      valor: "R$ 75,90",
-      imagem: require("@/assets/images/img/bolo01.png"),
-      status: "ativo",
-      favorito: false,
-    },
-    {
-      id: 2,
-      nome: "Bolo de cenoura",
-      descricao: "Bolo de cenoura com cobertura de chocolate",
-      categoria: "Bolos",
-      valor: "R$ 75,90",
-      imagem: require("@/assets/images/img/bolo01.png"),
-      status: "ativo",
-      favorito: false,
-    },
-    {
-      id: 3,
-      nome: "Brigadeiro Gourmet",
-      descricao: "Brigadeiro de chocolate com cobertura de chantily",
-      categoria: "Doces",
-      valor: "R$ 75,90",
-      imagem: require("@/assets/images/img/bolo01.png"),
-      status: "ativo",
-      favorito: false,
-    },
-    {
-      id: 4,
-      nome: "Bolo de aveia",
-      descricao: "Massa integral de aveia com banana caramelizada e nozes",
-      categoria: "Bolos",
-      valor: "R$ 75,90",
-      imagem: require("@/assets/images/img/bolo01.png"),
-      status: "ativo",
-      favorito: false,
-    },
+  const [produtosEmDestaque, setProdutosEmDestaque] = useState<any[]>([]);
+  //Carregar as informações da API
+  useEffect(() => {
+    async function carregarProdutos() {
+      try {
+        const resposta = await fetch(`${API}/produtos`);
+        const json = await resposta.json();
 
-  ]);
+        const produtos = json.data
+          .filter(
+            (produto: any) =>
+              produto.destaque_produto === "SIM" &&
+              produto.status_produto === "ATIVO",
+          )
+          .map((produto: any) => ({
+            ...produto,
+            favorito: false,
+          }));
+        setProdutosEmDestaque(produtos);
+      } catch (erro) {
+        console.log("Erro ao carregar os produtos em destque", erro);
+      }
+    }
+    carregarProdutos();
+  }, []);
+  const [semImagem, setSemImagem] = useState<number[]>([]);
 
-  function alterarFavorito(id: number){
-    setProdutosDestaque((produtoFavorito) =>
+  // const [produtosDestaque, setProdutosDestaque] = useState([
+  //   {
+  //     id: 1,
+  //     nome: "Bolo de banana fit",
+  //     descricao: "Banana prata com canela e gergilim da Noruega",
+  //     categoria: "Bolos",
+  //     valor: "R$ 75,90",
+  //     imagem: require("@/assets/images/img/bolo01.png"),
+  //     status: "ativo",
+  //     favorito: false,
+  //   },
+  //   {
+  //     id: 2,
+  //     nome: "Bolo de cenoura",
+  //     descricao: "Bolo de cenoura com cobertura de chocolate",
+  //     categoria: "Bolos",
+  //     valor: "R$ 75,90",
+  //     imagem: require("@/assets/images/img/bolo01.png"),
+  //     status: "ativo",
+  //     favorito: false,
+  //   },
+  //   {
+  //     id: 3,
+  //     nome: "Brigadeiro Gourmet",
+  //     descricao: "Brigadeiro de chocolate com cobertura de chantily",
+  //     categoria: "Doces",
+  //     valor: "R$ 75,90",
+  //     imagem: require("@/assets/images/img/bolo01.png"),
+  //     status: "ativo",
+  //     favorito: false,
+  //   },
+  //   {
+  //     id: 4,
+  //     nome: "Bolo de aveia",
+  //     descricao: "Massa integral de aveia com banana caramelizada e nozes",
+  //     categoria: "Bolos",
+  //     valor: "R$ 75,90",
+  //     imagem: require("@/assets/images/img/bolo01.png"),
+  //     status: "ativo",
+  //     favorito: false,
+  //   },
+
+  // ]);
+
+  function alterarFavorito(id: number) {
+    setProdutosEmDestaque((produtoFavorito) =>
       produtoFavorito.map((produto) =>
-        produto.id === id
-          ? {...produto, favorito: !produto.favorito}
+        produto.id_produto === id
+          ? { ...produto, favorito: !produto.favorito }
           : produto,
       ),
     );
@@ -108,14 +140,15 @@ export default function HomeScreen() {
                   placeholderTextColor={cores.cinza}
                 />
                 <Pressable style={homeStyle.btnBuscar}>
-                  <Image 
-                  style={homeStyle.imgBuscar}
-                  source={require("@/assets/images/img/lupa.png")}                  
+                  <Image
+                    style={homeStyle.imgBuscar}
+                    source={require("@/assets/images/img/lupa.png")}
                   />
                 </Pressable>
               </View>
 
-              <Image style={homeStyle.banner}
+              <Image
+                style={homeStyle.banner}
                 source={require("@/assets/images/img/banner.png")}
                 resizeMode="stretch"
               />
@@ -123,40 +156,41 @@ export default function HomeScreen() {
               <View style={homeStyle.categoria}>
                 <Text style={homeStyle.tituloSecao}>Categoria</Text>
                 <View style={homeStyle.conteudoCategoria}>
-                    <View style={homeStyle.itemCategoria}>
-                        <Image style={homeStyle.imgCategoria}
-                        source={require("@/assets/images/img/bolo.png")}
-                        />
-                        <Text style={homeStyle.txtCategoria}>Bolos</Text>
-                    </View>
-                    <View style={homeStyle.itemCategoria}>
-                        <Image style={homeStyle.imgCategoria}
-                         source={require("@/assets/images/img/brigadeiro.png")}
-                        
-                        />
-                        <Text style={homeStyle.txtCategoria}>Doces</Text>
-                    </View>
-                    <View style={homeStyle.itemCategoria}>
-                        <Image style={homeStyle.imgCategoria}
-                         source={require("@/assets/images/img/torta.png")}
-
-                        />
-                        <Text style={homeStyle.txtCategoria}>Tortas</Text>
-                    </View>
-                    <View style={homeStyle.itemCategoria}>
-                        <Image style={homeStyle.imgCategoria}
-                         source={require("@/assets/images/img/copo-de-plastico.png")}
-                        
-                        />
-                        <Text style={homeStyle.txtCategoria}>Bebidas</Text>
-                    </View>
-                    <View style={homeStyle.itemCategoria}>
-                        <Image style={homeStyle.imgCategoria}
-                        source={require("@/assets/images/img/presente-de-supermercado.png")}
-                        
-                        />
-                        <Text style={homeStyle.txtCategoria}>Kits</Text>
-                    </View>
+                  <View style={homeStyle.itemCategoria}>
+                    <Image
+                      style={homeStyle.imgCategoria}
+                      source={require("@/assets/images/img/bolo.png")}
+                    />
+                    <Text style={homeStyle.txtCategoria}>Bolos</Text>
+                  </View>
+                  <View style={homeStyle.itemCategoria}>
+                    <Image
+                      style={homeStyle.imgCategoria}
+                      source={require("@/assets/images/img/brigadeiro.png")}
+                    />
+                    <Text style={homeStyle.txtCategoria}>Doces</Text>
+                  </View>
+                  <View style={homeStyle.itemCategoria}>
+                    <Image
+                      style={homeStyle.imgCategoria}
+                      source={require("@/assets/images/img/torta.png")}
+                    />
+                    <Text style={homeStyle.txtCategoria}>Tortas</Text>
+                  </View>
+                  <View style={homeStyle.itemCategoria}>
+                    <Image
+                      style={homeStyle.imgCategoria}
+                      source={require("@/assets/images/img/copo-de-plastico.png")}
+                    />
+                    <Text style={homeStyle.txtCategoria}>Bebidas</Text>
+                  </View>
+                  <View style={homeStyle.itemCategoria}>
+                    <Image
+                      style={homeStyle.imgCategoria}
+                      source={require("@/assets/images/img/presente-de-supermercado.png")}
+                    />
+                    <Text style={homeStyle.txtCategoria}>Kits</Text>
+                  </View>
                 </View>
               </View>
 
@@ -168,49 +202,72 @@ export default function HomeScreen() {
                   showsHorizontalScrollIndicator={false}
                 >
                   {/* CARD QUE IRA SE REPETIR */}
-                  {produtosDestaque.map((produto) => (
-                  <View key={produto.id} style={homeStyle.itemDestaque}>
-                    <View style={homeStyle.caixaImagem}>
-                      <Image
-                        style={homeStyle.imgDestaque}
-                        source={produto.imagem}
-                      />
-                      <Pressable
-                        style={homeStyle.btnFavorito}
-                        onPress={() => alterarFavorito(produto.id)}
-                      >
-                        <Text style={homeStyle.txtFavorito}>
-                          {produto.favorito ? "★" : "☆"}
-                        </Text>
-                      </Pressable>
-                    </View>
-                    <View style={homeStyle.infoDestaque}>
-                      <Text style={homeStyle.txtDestaque}>{produto.nome}</Text>
-                      <Text style={homeStyle.txtDescricao}>
-                        {produto.descricao}
-                      </Text>
-                      <View style={homeStyle.rodapeDestaque}>
-                        <Text style={homeStyle.precoDestaque}>{produto.valor}</Text>
+                  {produtosEmDestaque.map((produto) => (
+                    <View
+                      key={produto.id_produto}
+                      style={homeStyle.itemDestaque}
+                    >
+                      <View style={homeStyle.caixaImagem}>
+                        <Image
+                          style={homeStyle.imgDestaque}
+                          source={
+                            semImagem.includes(produto.id_produto) ||
+                            !produto.foto_produto
+                              ? { uri: `${IMAGEM}/produto/sem-imagem.png` }
+                              : { uri: `${IMAGEM}/${produto.foto_produto}` }
+                          }
+                          onError={() => {
+                            setSemImagem((imagem) => [
+                              ...imagem,
+                              produto.id_produto,
+                            ]);
+                          }}
+                        />
                         <Pressable
-                          style={homeStyle.btnDetalhes}
-                          onPress={() => router.navigate("/detalhe-produto")}
+                          style={homeStyle.btnFavorito}
+                          onPress={() => alterarFavorito(produto.id_produto)}
                         >
-                          <Image
-                            style={homeStyle.imgDetalhes}
-                            source={require("@/assets/images/img/mais.png")}
-                          />
+                          <Text style={homeStyle.txtFavorito}>
+                            {produto.favorito ? "★" : "☆"}
+                          </Text>
                         </Pressable>
                       </View>
+                      <View style={homeStyle.infoDestaque}>
+                        <Text style={homeStyle.txtDestaque}>
+                          {produto.nome_produto}
+                        </Text>
+                        <Text style={homeStyle.txtDescricao}>
+                          {produto.descricao}
+                        </Text>
+                        <View style={homeStyle.rodapeDestaque}>
+                          {/* <Text style={homeStyle.precoDestaque}>
+                           R$ {Number(produto.valor_produto).toFixed(2).replace(".",",")}
+                          </Text> */}
+                          <Text style={homeStyle.precoDestaque}>
+                            {Number(produto.valor_produto).toLocaleString(
+                              "pt-BR",
+                              { style: "currency", currency: "BRL" },
+                            )}
+                          </Text>
+                          <Pressable
+                            style={homeStyle.btnDetalhes}
+                            onPress={() => router.navigate("/detalhe-produto")}
+                          >
+                            <Image
+                              style={homeStyle.imgDetalhes}
+                              source={require("@/assets/images/img/mais.png")}
+                            />
+                          </Pressable>
+                        </View>
+                      </View>
                     </View>
-                  </View>
                   ))}
-                   {/* FINAL DO CARD */}
-
+                  {/* FINAL DO CARD */}
                 </ScrollView>
               </View>
             </View>
           </ScrollView>
-          <FooterScreen/>
+          <FooterScreen />
         </SafeAreaView>
       </ImageBackground>
     </View>
