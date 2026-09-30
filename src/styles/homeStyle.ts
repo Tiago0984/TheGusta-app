@@ -131,6 +131,18 @@ const homeStyle = StyleSheet.create({
     marginBottom: 20,
   },
 
+  semDestaque: {
+    width: "100%",
+    paddingVertical: 20,
+    alignItems: "center",
+  },
+
+  txtSemDestaque: {
+    fontSize: 20,
+    fontFamily: fontes.comum,
+    color: cores.cinza,
+  },
+
   conteudoDestaque: {
     width: '100%',
     flexDirection: 'row',

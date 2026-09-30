@@ -196,6 +196,7 @@ export default function HomeScreen() {
 
               <View style={homeStyle.destaque}>
                 <Text style={homeStyle.tituloSecao}>Destaques</Text>
+                {produtosEmDestaque.length > 0 ? (
                 <ScrollView
                   contentContainerStyle={homeStyle.conteudoDestaque}
                   horizontal
@@ -237,7 +238,7 @@ export default function HomeScreen() {
                           {produto.nome_produto}
                         </Text>
                         <Text style={homeStyle.txtDescricao}>
-                          {produto.descricao}
+                          {produto.descricao_produto}
                         </Text>
                         <View style={homeStyle.rodapeDestaque}>
                           {/* <Text style={homeStyle.precoDestaque}>
@@ -263,7 +264,16 @@ export default function HomeScreen() {
                     </View>
                   ))}
                   {/* FINAL DO CARD */}
+
                 </ScrollView>
+
+                ) : (
+                  <View style={homeStyle.semDestaque}>
+                    <Text style={homeStyle.txtSemDestaque}>Nenhum produto em destaque</Text>
+                  </View>
+                
+                )}
+
               </View>
             </View>
           </ScrollView>
