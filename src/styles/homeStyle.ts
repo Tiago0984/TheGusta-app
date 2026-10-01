@@ -99,19 +99,22 @@ const homeStyle = StyleSheet.create({
   conteudoCategoria: {
     width: "100%",
     flexDirection: "row",
-    justifyContent: "space-between"
+    flexWrap: "wrap",
+    rowGap: 8,
   },
 
   itemCategoria: {
-    width: 55,
-    height: 55,
+    width: "31%",
+    height: 34,
     borderRadius: 10,
-    borderColor: cores.laranja,
-    borderWidth: 2,
-    paddingVertical: 3,
-    paddingHorizontal: 2,
+    paddingHorizontal: 4,
     alignItems: "center",
-    backgroundColor: cores.laranjaclaro,
+    justifyContent: "center",
+    backgroundColor: cores.laranja,
+  },
+
+  espacoCategoria: {
+    marginRight: "3.5%",
   },
 
   imgCategoria: {
@@ -120,9 +123,10 @@ const homeStyle = StyleSheet.create({
   },
 
   txtCategoria: {
-    fontSize: 12,
-    fontFamily: fontes.comum,
-    color: cores.cinza,
+    fontSize: 14,
+    fontFamily: fontes.negrito,
+    color: cores.branco,
+    textAlign: "center",
   },
 
   destaque: {
