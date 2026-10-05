@@ -78,11 +78,19 @@ const homeStyle = StyleSheet.create({
     height: "100%",
   },
 
+  areaBanner: {
+    width: "100%",
+    marginTop: 30,
+  },
+
   banner: {
     width: "100%",
     height: 160,
     borderRadius: 30,
-    marginTop: 30,
+  },
+
+  bannerVazio: {
+    backgroundColor: "#F1F2F4",
   },
 
   categoria: {

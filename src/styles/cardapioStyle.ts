@@ -114,6 +114,18 @@ const cardapioStyle = StyleSheet.create({
     marginBottom: 10,
   },
 
+  semDestaque: {
+    width: "100%",
+    paddingVertical: 20,
+    alignItems: "center",
+  },
+
+  txtSemDestaque: {
+    fontSize: 20,
+    fontFamily: fontes.comum,
+    color: cores.cinza,
+  },
+
   produtos: {
     width: "100%",
     flexDirection: "row",

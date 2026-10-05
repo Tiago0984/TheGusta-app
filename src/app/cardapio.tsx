@@ -22,10 +22,11 @@ const IMAGEM = `${SERVIDOR}/davilla/images`;
 export default function CardapioScreen() {
   const [favoritos, setFavoritos] = useState(Array(20).fill(false));
 
+  // Estado para armazenar os produtos e categorias carregados da API (Listar produtos e categorias)
   const [produtos, setProdutos] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
   const [semImagem, setSemImagem] = useState<Number[]>([]);
-  const {categoria} = useLocalSearchParams();
+  const { categoria, busca: buscaParam } = useLocalSearchParams();
 
   useEffect(() => {
     async function carregarProdutos() {
@@ -61,8 +62,25 @@ export default function CardapioScreen() {
     carregarCategorias();
   }, []);
 
+  useEffect(() => {
+    if (buscaParam) {
+      const texto = String(buscaParam);
+      setTextoBusca(texto);
+      setBusca(texto);
+    }
+
+  },[buscaParam]);
+
+  // Estado para armazenar o texto digitado no campo de busca (Buscar produtos)
+  const [textoBusca, setTextoBusca] = useState(String(buscaParam ?? ""));
+  const [busca, setBusca] = useState(String(buscaParam ?? ""));
+
+  const produtosFiltrados = produtos.filter((produto) =>
+    produto.nome_produto.toLowerCase().includes(busca.trim().toLowerCase()),
+  );
+
   const categoriasComProdutos = categorias.filter((categoria) =>
-    produtos.some(
+    produtosFiltrados.some(
       (produto) =>
         produto.categoria_produto.id_categoria === categoria.id_categoria,
     ),
@@ -73,14 +91,17 @@ export default function CardapioScreen() {
   const scrollInicial = useRef(false);
 
   useEffect(() => {
-    if (!categoria || scrollInicial.current) 
-    {return;}
+    if (!categoria || scrollInicial.current) {
+      return;
+    }
     const idCategoria = Number(categoria);
     const intervalo = setTimeout(() => {
       const posicao = posicaoCategoria.current[idCategoria];
       if (posicao != undefined) {
-        scrollRef.current?.scrollTo({ 
-        y: posicao, animated: true });
+        scrollRef.current?.scrollTo({
+          y: posicao,
+          animated: true,
+        });
         scrollInicial.current = true;
         clearInterval(intervalo);
       }
@@ -155,8 +176,14 @@ export default function CardapioScreen() {
                     style={cardapioStyle.txtProduto}
                     placeholder="Buscar produtos"
                     placeholderTextColor={cores.cinza}
+                    value={textoBusca}
+                    onChangeText={setTextoBusca}
+                    onSubmitEditing={() => setBusca(textoBusca)}
                   />
-                  <Pressable style={cardapioStyle.btnBuscar}>
+                  <Pressable
+                    style={cardapioStyle.btnBuscar}
+                    onPress={() => setBusca(textoBusca)}
+                  >
                     <Image
                       style={cardapioStyle.imgBuscar}
                       source={require("@/assets/images/img/lupa.png")}
@@ -181,99 +208,105 @@ export default function CardapioScreen() {
                   ))}
                 </View>
 
-                {categoriasComProdutos
-                  .map((categoria) => (
-                  <View
-                    key={categoria.id_categoria}
-                    style={cardapioStyle.categorias}
-                    onLayout={(event) => {
-                      posicaoCategoria.current[categoria.id_categoria] =
-                        event.nativeEvent.layout.y;
-                    }}
-                  >
-                    <Text style={cardapioStyle.tituloCategoria}>
-                      {categoria.nome_categoria}
-                    </Text>
+                {produtosFiltrados.length > 0 ? (
+                  categoriasComProdutos.map((categoria) => (
+                    <View
+                      key={categoria.id_categoria}
+                      style={cardapioStyle.categorias}
+                      onLayout={(event) => {
+                        posicaoCategoria.current[categoria.id_categoria] =
+                          event.nativeEvent.layout.y;
+                      }}
+                    >
+                      <Text style={cardapioStyle.tituloCategoria}>
+                        {categoria.nome_categoria}
+                      </Text>
 
-                    <View style={cardapioStyle.produtos}>
-                      {produtos
-                        .filter(
-                          (produto) =>
-                            produto.categoria_produto.id_categoria ===
-                            categoria.id_categoria,
-                        )
-                        .map((produto) => (
-                          <View
-                            key={produto.id_produto}
-                            style={cardapioStyle.itemProduto}
-                          >
-                            <View style={cardapioStyle.caixaImagem}>
-                              <Image
-                                style={cardapioStyle.imgDestaque}
-                                resizeMode="stretch"
-                                source={
-                                  semImagem.includes(produto.id_produto) ||
-                                  !produto.foto_produto
-                                    ? {
-                                        uri: `${IMAGEM}/produto/sem-imagem.png`,
-                                      }
-                                    : {
-                                        uri: `${IMAGEM}/${produto.foto_produto}`,
-                                      }
-                                }
-                                onError={() => {
-                                  setSemImagem((imagem) => [
-                                    ...imagem,
-                                    produto.id_produto,
-                                  ]);
-                                }}
-                              />
-                              <Pressable
-                                style={cardapioStyle.btnFavorito}
-                                onPress={() =>
-                                  alterarFavorito(produto.id_produto)
-                                }
-                              >
-                                <Text style={cardapioStyle.txtFavorito}>
-                                  {produto.favorito ? "★" : "☆"}
-                                </Text>
-                              </Pressable>
-                            </View>
-                            <View style={cardapioStyle.infoDestaque}>
-                              <Text style={cardapioStyle.txtDestaque}>
-                                {produto.nome_produto}
-                              </Text>
-                              <Text style={cardapioStyle.txtDescricao}>
-                                {produto.descricao_produto}
-                              </Text>
-                              <View style={cardapioStyle.rodapeDestaque}>
-                                <Text style={cardapioStyle.precoDestaque}>
-                                  {Number(produto.valor_produto).toLocaleString(
-                                    "pt-BR",
-                                    {
-                                      style: "currency",
-                                      currency: "BRL",
-                                    },
-                                  )}
-                                </Text>
+                      <View style={cardapioStyle.produtos}>
+                        {produtosFiltrados
+                          .filter(
+                            (produto) =>
+                              produto.categoria_produto.id_categoria ===
+                              categoria.id_categoria,
+                          )
+                          .map((produto) => (
+                            <View
+                              key={produto.id_produto}
+                              style={cardapioStyle.itemProduto}
+                            >
+                              <View style={cardapioStyle.caixaImagem}>
+                                <Image
+                                  style={cardapioStyle.imgDestaque}
+                                  resizeMode="stretch"
+                                  source={
+                                    semImagem.includes(produto.id_produto) ||
+                                    !produto.foto_produto
+                                      ? {
+                                          uri: `${IMAGEM}/produto/sem-imagem.png`,
+                                        }
+                                      : {
+                                          uri: `${IMAGEM}/${produto.foto_produto}`,
+                                        }
+                                  }
+                                  onError={() => {
+                                    setSemImagem((imagem) => [
+                                      ...imagem,
+                                      produto.id_produto,
+                                    ]);
+                                  }}
+                                />
                                 <Pressable
-                                  style={cardapioStyle.btnDetalhes}
+                                  style={cardapioStyle.btnFavorito}
                                   onPress={() =>
-                                    router.navigate("/detalhe-produto")
+                                    alterarFavorito(produto.id_produto)
                                   }
                                 >
-                                  <Image
-                                    style={cardapioStyle.imgDetalhes}
-                                    source={require("@/assets/images/img/mais.png")}
-                                  />
+                                  <Text style={cardapioStyle.txtFavorito}>
+                                    {produto.favorito ? "★" : "☆"}
+                                  </Text>
                                 </Pressable>
                               </View>
+                              <View style={cardapioStyle.infoDestaque}>
+                                <Text style={cardapioStyle.txtDestaque}>
+                                  {produto.nome_produto}
+                                </Text>
+                                <Text style={cardapioStyle.txtDescricao}>
+                                  {produto.descricao_produto}
+                                </Text>
+                                <View style={cardapioStyle.rodapeDestaque}>
+                                  <Text style={cardapioStyle.precoDestaque}>
+                                    {Number(
+                                      produto.valor_produto,
+                                    ).toLocaleString("pt-BR", {
+                                      style: "currency",
+                                      currency: "BRL",
+                                    })}
+                                  </Text>
+                                  <Pressable
+                                    style={cardapioStyle.btnDetalhes}
+                                    onPress={() =>
+                                      router.navigate("/detalhe-produto")
+                                    }
+                                  >
+                                    <Image
+                                      style={cardapioStyle.imgDetalhes}
+                                      source={require("@/assets/images/img/mais.png")}
+                                    />
+                                  </Pressable>
+                                </View>
+                              </View>
                             </View>
-                          </View>
-                        ))}
+                          ))}
+                      </View>
                     </View>
+                  ))
+                ) : (
+                  <View style={cardapioStyle.semDestaque}>
+                    <Text style={cardapioStyle.txtSemDestaque}>
+                      Nenhum produto encontrado
+                    </Text>
                   </View>
-                ))}
+                )}
               </View>
             </View>
           </ScrollView>

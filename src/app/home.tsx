@@ -23,6 +23,9 @@ export default function HomeScreen() {
   const [favoritos, setFavoritos] = useState([false, false, false]);
   const [produtos, setProdutos] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
+  const [banners, setBanners] = useState<any[]>([]);
+  const [bannerSemImagem, setBannerSemImagem] = useState<number[]>([]);
+  const [larguraBanner, setLarguraBanner] = useState(0);
 
   function alternarFavorito(indice: number) {
     setFavoritos((atual) =>
@@ -68,7 +71,42 @@ export default function HomeScreen() {
       }
     }
     carregarCategorias();
+
+    async function carregarBanners() {
+      try {
+        const resposta = await fetch(`${API}/banners`);
+        const json = await resposta.json();
+        const bannersAtivos = json.data.filter(
+          (banner: any) => banner.status_banner === "ATIVO",
+        );
+
+        // Embaralha os banners para exibir em ordem aleatoria
+        for (let i = bannersAtivos.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [bannersAtivos[i], bannersAtivos[j]] = [
+            bannersAtivos[j],
+            bannersAtivos[i],
+          ];
+        }
+        setBanners(bannersAtivos);
+      } catch (erro) {
+        console.log("Erro ao carregar os banners", erro);
+      }
+    }
+    carregarBanners();
+
   }, []);
+
+  const [textoBusca, setTextoBusca] = useState("");
+
+  function buscarProduto() {
+    router.push({
+      pathname: "/cardapio",
+      params: {
+        busca: textoBusca,
+      },
+    });
+  }
 
   const categoriasComProdutos = categorias.filter((categoria) =>
     produtos.some(
@@ -162,8 +200,11 @@ export default function HomeScreen() {
                   style={homeStyle.txtProduto}
                   placeholder="Buscar produto"
                   placeholderTextColor={cores.cinza}
+                  value={textoBusca}
+                  onChangeText={setTextoBusca}
+                  onSubmitEditing={buscarProduto}
                 />
-                <Pressable style={homeStyle.btnBuscar}>
+                <Pressable style={homeStyle.btnBuscar} onPress={buscarProduto}>
                   <Image
                     style={homeStyle.imgBuscar}
                     source={require("@/assets/images/img/lupa.png")}
@@ -171,11 +212,55 @@ export default function HomeScreen() {
                 </Pressable>
               </View>
 
-              <Image
-                style={homeStyle.banner}
-                source={require("@/assets/images/img/banner.png")}
-                resizeMode="stretch"
-              />
+              <View
+                style={homeStyle.areaBanner}
+                onLayout={(event) =>
+                  setLarguraBanner(event.nativeEvent.layout.width)
+                }
+              >
+                {banners.length > 0 ? (
+                  <ScrollView
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                  >
+                    {banners.map((banner) => {
+                      const semFoto =
+                        bannerSemImagem.includes(banner.id_banner) ||
+                        !banner.foto_banner;
+
+                      return (
+                        <Image
+                          key={banner.id_banner}
+                          style={[
+                            homeStyle.banner,
+                            { width: larguraBanner },
+                            semFoto && homeStyle.bannerVazio,
+                          ]}
+                          resizeMode={semFoto ? "contain" : "cover"}
+                          source={
+                            semFoto
+                              ? require("@/assets/images/img/sem-imagem.png")
+                              : { uri: `${IMAGEM}/${banner.foto_banner}` }
+                          }
+                          onError={() => {
+                            setBannerSemImagem((imagem) => [
+                              ...imagem,
+                              banner.id_banner,
+                            ]);
+                          }}
+                        />
+                      );
+                    })}
+                  </ScrollView>
+                ) : (
+                  <Image
+                    style={[homeStyle.banner, homeStyle.bannerVazio]}
+                    source={require("@/assets/images/img/sem-imagem.png")}
+                    resizeMode="contain"
+                  />
+                )}
+              </View>
 
               <View style={homeStyle.categoria}>
                 <Text style={homeStyle.tituloSecao}>Categoria</Text>
