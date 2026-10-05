@@ -4,6 +4,9 @@ import { router, usePathname } from "expo-router";
 
 export default function FooterScreen() {
   const pathname = usePathname();
+  function menuAtivo(rota: string) {
+    return pathname === rota;
+  }
 
   return (
     <View style={globalStyle.footer}>
@@ -15,7 +18,7 @@ export default function FooterScreen() {
         <Text
           style={[
             globalStyle.txtFooter,
-            pathname === "/home" && globalStyle.txtFooterAtivo,
+            menuAtivo("/home") && globalStyle.txtFooterAtivo,
           ]}
         >
           Home
@@ -30,7 +33,7 @@ export default function FooterScreen() {
         <Text
           style={[
             globalStyle.txtFooter,
-            pathname === "/cardapio" && globalStyle.txtFooterAtivo,
+            menuAtivo("/cardapio") && globalStyle.txtFooterAtivo, 
           ]}
         >
           Cardápio
@@ -45,7 +48,7 @@ export default function FooterScreen() {
         <Text
           style={[
             globalStyle.txtFooter,
-            pathname === "/sacola" && globalStyle.txtFooterAtivo,
+            menuAtivo("/sacola") && globalStyle.txtFooterAtivo,
           ]}
         >
           Sacola
@@ -60,7 +63,7 @@ export default function FooterScreen() {
         <Text
           style={[
             globalStyle.txtFooter,
-            pathname === "/meus-pedidos" && globalStyle.txtFooterAtivo,
+            menuAtivo("/meus-pedidos") && globalStyle.txtFooterAtivo,
           ]}
         >
           Pedidos
@@ -75,7 +78,7 @@ export default function FooterScreen() {
         <Text
           style={[
             globalStyle.txtFooter,
-            pathname === "/configuracao" && globalStyle.txtFooterAtivo,
+            menuAtivo("/configuracao") && globalStyle.txtFooterAtivo,
           ]}
         >
           Config
