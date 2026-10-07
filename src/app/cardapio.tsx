@@ -15,6 +15,8 @@ import cardapioStyle from "@/styles/cardapioStyle";
 import { cores } from "@/styles/variaveis";
 import FooterScreen from "@/app/footer";
 
+
+
 const SERVIDOR = "http://localhost:8081";
 const API = `${SERVIDOR}/api/v1`;
 const IMAGEM = `${SERVIDOR}/davilla/images`;
@@ -285,7 +287,12 @@ export default function CardapioScreen() {
                                   <Pressable
                                     style={cardapioStyle.btnDetalhes}
                                     onPress={() =>
-                                      router.navigate("/detalhe-produto")
+                                      router.push({
+                                        pathname: "/detalhe-produto",
+                                        params: {
+                                          slug: produto.slug_produto,
+                                        },
+                                        })
                                     }
                                   >
                                     <Image

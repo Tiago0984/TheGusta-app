@@ -4,6 +4,19 @@ import { cores } from "./variaveis";
 import { fontes } from "./variaveis";
 
 const detalheProdutoStyle = StyleSheet.create({
+  mensagem: {
+    width: "100%",
+    paddingVertical: 60,
+    alignItems: "center",
+  },
+
+  txtMensagem: {
+    fontSize: 20,
+    fontFamily: fontes.comum,
+    color: cores.cinza,
+    textAlign: "center",
+  },
+
   conteudo: {
     marginTop: 60,
     marginBottom: 30,
@@ -67,6 +80,13 @@ const detalheProdutoStyle = StyleSheet.create({
     color: cores.preto,
     fontFamily: fontes.negrito,
     textAlign: "right",
+  },
+
+  linhaCategoria: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
 
   valorProduto: {
