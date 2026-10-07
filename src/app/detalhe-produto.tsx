@@ -3,7 +3,7 @@ import detalheProdutoStyle from "@/styles/detalheProdutoStyle";
 import globalStyle from "@/styles/globalStyle";
 import { cores } from "@/styles/variaveis";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -15,7 +15,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { API, IMAGEM } from "@/config/api";
+import { IMAGEM } from "@/config/api";
+import { ApiError, getCategorias, getProduto } from "@/services/api";
 
 function formatarPreco(valor: number) {
   return Number(valor).toLocaleString("pt-BR", {
@@ -31,58 +32,49 @@ export default function DetalheProdutoScreen() {
 
   // Estado para armazenar o produto carregado da API (Detalhe do produto)
   const [produto, setProduto] = useState<any>(null);
+  const [descricaoCategoria, setDescricaoCategoria] = useState("");
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
   const [semImagem, setSemImagem] = useState(false);
   const [quantidade, setQuantidade] = useState(1);
 
-  useEffect(() => {
-    async function carregarProduto() {
-      if (!slug) {
-        setErro("Produto não encontrado.");
-        setCarregando(false);
-        return;
-      }
-
-      try {
-        setCarregando(true);
-        setErro("");
-
-        const resposta = await fetch(`${API}/produtos/${slug}`);
-        const json = await resposta.json();
-
-        if (!resposta.ok) {
-          setErro("Não foi possível carregar o produto.");
-          return;
-        }
-
-        setProduto(json.data);
-      } catch (error) {
-        console.log("Erro ao carregar o produto", error);
-        setErro("Não foi possível carregar o produto.");
-      } finally {
-        setCarregando(false);
-      }
+  const carregarProduto = useCallback(async () => {
+    if (!slug) {
+      setErro("Produto não encontrado.");
+      setCarregando(false);
+      return;
     }
-    carregarProduto();
+
+    try {
+      setCarregando(true);
+      setErro("");
+
+      const [produtoCarregado, categoriasData] = await Promise.all([
+        getProduto(String(slug)),
+        getCategorias(),
+      ]);
+      setProduto(produtoCarregado);
+
+      const categoriaDoProduto = categoriasData.find(
+        (categoria) => categoria.id_categoria === produtoCarregado.id_categoria,
+      );
+      setDescricaoCategoria(categoriaDoProduto?.descricao_categoria ?? "");
+    } catch (error) {
+      console.log("Erro ao carregar o produto", error);
+      setErro(
+        error instanceof ApiError
+          ? error.message
+          : "Não foi possível carregar o produto.",
+      );
+    } finally {
+      setCarregando(false);
+    }
   }, [slug]);
 
-  if (carregando) {
-    return (
-      <View style={globalStyle.container}>
-        <Text>Carregando produto...</Text>
-      </View>
-    );
-  }
+  useEffect(() => {
+    carregarProduto();
+  }, [carregarProduto]);
 
-  if (erro) {
-    return (
-      <View style={globalStyle.container}>
-        <Text>{erro || "Produto não encontrado."}</Text>
-      </View>
-    );
-  }
-  
   function aumentarQuantidade() {
     setQuantidade(quantidade + 1);
   }
@@ -127,6 +119,14 @@ export default function DetalheProdutoScreen() {
                 <Text style={detalheProdutoStyle.txtMensagem}>
                   {erro || "Produto não encontrado."}
                 </Text>
+                <Pressable
+                  style={detalheProdutoStyle.btnTentarNovo}
+                  onPress={carregarProduto}
+                >
+                  <Text style={detalheProdutoStyle.txtTentarNovo}>
+                    Tentar de novo
+                  </Text>
+                </Pressable>
               </View>
             ) : (
               <View style={detalheProdutoStyle.conteudo}>
@@ -170,7 +170,7 @@ export default function DetalheProdutoScreen() {
                     })}
                   </Text>
                   <Text style={detalheProdutoStyle.descricaoCurta}>
-                    {produto.categoria_produto?.descricao_categoria}
+                    {descricaoCategoria}
                   </Text>
                   <Text style={detalheProdutoStyle.tituloDescricao}>
                     Descrição

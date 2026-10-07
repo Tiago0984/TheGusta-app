@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
+  ActivityIndicator,
   ImageBackground,
   Image,
   Pressable,
@@ -15,11 +16,8 @@ import cardapioStyle from "@/styles/cardapioStyle";
 import { cores } from "@/styles/variaveis";
 import FooterScreen from "@/app/footer";
 
-
-
-const SERVIDOR = "http://localhost:8081";
-const API = `${SERVIDOR}/api/v1`;
-const IMAGEM = `${SERVIDOR}/davilla/images`;
+import { IMAGEM } from "@/config/api";
+import { ApiError, getCategorias, getProdutos } from "@/services/api";
 
 export default function CardapioScreen() {
   const [favoritos, setFavoritos] = useState(Array(20).fill(false));
@@ -28,41 +26,48 @@ export default function CardapioScreen() {
   const [produtos, setProdutos] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
   const [semImagem, setSemImagem] = useState<Number[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState("");
   const { categoria, busca: buscaParam } = useLocalSearchParams();
 
-  useEffect(() => {
-    async function carregarProdutos() {
-      try {
-        const resposta = await fetch(`${API}/produtos`);
-        const json = await resposta.json();
-        const produtosAtivos = json.data
-          .filter((produto: any) => produto.status_produto === "ATIVO")
-          .map((produto: any) => ({
-            ...produto,
-            favorito: false,
-          }))
-          .sort((a: any, b: any) => a.nome_produto - b.nome_produto);
-        setProdutos(produtosAtivos);
-      } catch (erro) {
-        console.log("Erro ao carregar os produtos", erro);
-      }
-    }
-    carregarProdutos();
+  const carregarDados = useCallback(async () => {
+    try {
+      setCarregando(true);
+      setErro("");
 
-    async function carregarCategorias() {
-      try {
-        const resposta = await fetch(`${API}/categorias`);
-        const json = await resposta.json();
-        const categoriasAtivas = json.data
-          .filter((categoria: any) => categoria.status_categoria === "ATIVO")
-          .sort((a: any, b: any) => a.ordem_categoria - b.ordem_categoria);
-        setCategorias(categoriasAtivas);
-      } catch (erro) {
-        console.log("Erro ao carregar as categorias", erro);
-      }
+      const [produtosData, categoriasData] = await Promise.all([
+        getProdutos(),
+        getCategorias(),
+      ]);
+
+      const produtosAtivos = produtosData
+        .filter((produto) => produto.status_produto === "ATIVO")
+        .map((produto) => ({
+          ...produto,
+          favorito: false,
+        }))
+        .sort((a, b) => a.nome_produto.localeCompare(b.nome_produto));
+      setProdutos(produtosAtivos);
+
+      const categoriasAtivas = categoriasData
+        .filter((categoria) => categoria.status_categoria === "ATIVO")
+        .sort((a, b) => a.ordem_categoria - b.ordem_categoria);
+      setCategorias(categoriasAtivas);
+    } catch (error) {
+      console.log("Erro ao carregar os dados do cardápio", error);
+      setErro(
+        error instanceof ApiError
+          ? error.message
+          : "Não foi possível carregar os dados.",
+      );
+    } finally {
+      setCarregando(false);
     }
-    carregarCategorias();
   }, []);
+
+  useEffect(() => {
+    carregarDados();
+  }, [carregarDados]);
 
   useEffect(() => {
     if (buscaParam) {
@@ -193,6 +198,24 @@ export default function CardapioScreen() {
                   </Pressable>
                 </View>
 
+                {carregando ? (
+                  <View style={cardapioStyle.semDestaque}>
+                    <ActivityIndicator size="large" color={cores.laranja} />
+                  </View>
+                ) : erro ? (
+                  <View style={cardapioStyle.semDestaque}>
+                    <Text style={cardapioStyle.txtSemDestaque}>{erro}</Text>
+                    <Pressable
+                      style={cardapioStyle.btnTentarNovo}
+                      onPress={carregarDados}
+                    >
+                      <Text style={cardapioStyle.txtTentarNovo}>
+                        Tentar de novo
+                      </Text>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <>
                 <View style={cardapioStyle.conteudoCategoria}>
                   {categoriasComProdutos.map((categoria, indice) => (
                     <Pressable
@@ -313,6 +336,8 @@ export default function CardapioScreen() {
                       Nenhum produto encontrado
                     </Text>
                   </View>
+                )}
+                  </>
                 )}
               </View>
             </View>

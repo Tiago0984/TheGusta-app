@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
+  ActivityIndicator,
   Image,
   ImageBackground,
   Pressable,
@@ -15,7 +16,8 @@ import homeStyle from "@/styles/homeStyle";
 import { cores } from "@/styles/variaveis";
 import FooterScreen from "@/app/footer";
 
-import { API, IMAGEM } from "@/config/api";
+import { IMAGEM } from "@/config/api";
+import { ApiError, getBanners, getCategorias, getProdutos } from "@/services/api";
 
 
 
@@ -34,68 +36,64 @@ export default function HomeScreen() {
   }
 
   const [produtosEmDestaque, setProdutosEmDestaque] = useState<any[]>([]);
-  //Carregar as informações da API
-  useEffect(() => {
-    async function carregarProdutos() {
-      try {
-        const resposta = await fetch(`${API}/produtos`);
-        const json = await resposta.json();
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState("");
 
-        const produtos = json.data
-          .filter((produto: any) => produto.status_produto === "ATIVO")
-          .map((produto: any) => ({
-            ...produto,
-            favorito: false,
-          }));
-        setProdutos(produtos);
-        const destaques = produtos.filter(
-          (produto: any) => produto.destaque_produto === "SIM",
-        );
-        setProdutosEmDestaque(destaques);
-      } catch (erro) {
-        console.log("Erro ao carregar os produtos em destque", erro);
+  const carregarDados = useCallback(async () => {
+    try {
+      setCarregando(true);
+      setErro("");
+
+      const [produtosData, categoriasData, bannersData] = await Promise.all([
+        getProdutos(),
+        getCategorias(),
+        getBanners(),
+      ]);
+
+      const produtosAtivos = produtosData
+        .filter((produto) => produto.status_produto === "ATIVO")
+        .map((produto) => ({
+          ...produto,
+          favorito: false,
+        }));
+      setProdutos(produtosAtivos);
+      setProdutosEmDestaque(
+        produtosAtivos.filter((produto) => produto.destaque_produto === "SIM"),
+      );
+
+      const categoriasAtivas = categoriasData
+        .filter((categoria) => categoria.status_categoria === "ATIVO")
+        .sort((a, b) => a.ordem_categoria - b.ordem_categoria);
+      setCategorias(categoriasAtivas);
+
+      const bannersAtivos = bannersData.filter(
+        (banner) => banner.status_banner === "ATIVO",
+      );
+
+      // Embaralha os banners para exibir em ordem aleatoria
+      for (let i = bannersAtivos.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [bannersAtivos[i], bannersAtivos[j]] = [
+          bannersAtivos[j],
+          bannersAtivos[i],
+        ];
       }
+      setBanners(bannersAtivos);
+    } catch (error) {
+      console.log("Erro ao carregar os dados da home", error);
+      setErro(
+        error instanceof ApiError
+          ? error.message
+          : "Não foi possível carregar os dados.",
+      );
+    } finally {
+      setCarregando(false);
     }
-    carregarProdutos();
-
-    async function carregarCategorias() {
-      try {
-        const resposta = await fetch(`${API}/categorias`);
-        const json = await resposta.json();
-        const categoriasAtivas = json.data
-          .filter((categoria: any) => categoria.status_categoria === "ATIVO")
-          .sort((a: any, b: any) => a.ordem_categoria - b.ordem_categoria);
-        setCategorias(categoriasAtivas);
-      } catch (erro) {
-        console.log("Erro ao carregar as categorias", erro);
-      }
-    }
-    carregarCategorias();
-
-    async function carregarBanners() {
-      try {
-        const resposta = await fetch(`${API}/banners`);
-        const json = await resposta.json();
-        const bannersAtivos = json.data.filter(
-          (banner: any) => banner.status_banner === "ATIVO",
-        );
-
-        // Embaralha os banners para exibir em ordem aleatoria
-        for (let i = bannersAtivos.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [bannersAtivos[i], bannersAtivos[j]] = [
-            bannersAtivos[j],
-            bannersAtivos[i],
-          ];
-        }
-        setBanners(bannersAtivos);
-      } catch (erro) {
-        console.log("Erro ao carregar os banners", erro);
-      }
-    }
-    carregarBanners();
-
   }, []);
+
+  useEffect(() => {
+    carregarDados();
+  }, [carregarDados]);
 
   const [textoBusca, setTextoBusca] = useState("");
 
@@ -212,6 +210,22 @@ export default function HomeScreen() {
                 </Pressable>
               </View>
 
+              {carregando ? (
+                <View style={homeStyle.semDestaque}>
+                  <ActivityIndicator size="large" color={cores.laranja} />
+                </View>
+              ) : erro ? (
+                <View style={homeStyle.semDestaque}>
+                  <Text style={homeStyle.txtSemDestaque}>{erro}</Text>
+                  <Pressable
+                    style={homeStyle.btnTentarNovo}
+                    onPress={carregarDados}
+                  >
+                    <Text style={homeStyle.txtTentarNovo}>Tentar de novo</Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <>
               <View
                 style={homeStyle.areaBanner}
                 onLayout={(event) =>
@@ -378,6 +392,8 @@ export default function HomeScreen() {
                   )}
                 </View>
               </View>
+                </>
+              )}
             </View>
           </ScrollView>
           <FooterScreen />

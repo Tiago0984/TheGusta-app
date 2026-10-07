@@ -126,6 +126,20 @@ const cardapioStyle = StyleSheet.create({
     color: cores.cinza,
   },
 
+  btnTentarNovo: {
+    marginTop: 15,
+    paddingHorizontal: 25,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: cores.laranja,
+  },
+
+  txtTentarNovo: {
+    fontSize: 15,
+    color: cores.preto,
+    fontFamily: fontes.negrito,
+  },
+
   produtos: {
     width: "100%",
     flexDirection: "row",
