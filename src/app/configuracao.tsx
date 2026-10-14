@@ -13,8 +13,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { IMAGEM } from "@/config/api";
+import { useCliente } from "@/hooks/use-cliente";
+
 export default function ConfiguracaoScreen() {
   const [notificacoesAtivas, setNotificacoesAtivas] = useState(true);
+  const cliente = useCliente();
+  const [fotoClienteErro, setFotoClienteErro] = useState(false);
 
   return (
     <View style={globalStyle.container}>
@@ -59,12 +64,17 @@ export default function ConfiguracaoScreen() {
                   <View style={configuracaoStyle.bordaPerfil}>
                     <Image
                       style={configuracaoStyle.imgPerfil}
-                      source={require("@/assets/images/img/user.png")}
+                      source={
+                        cliente?.foto_cliente && !fotoClienteErro
+                          ? { uri: `${IMAGEM}/${cliente.foto_cliente}` }
+                          : require("@/assets/images/img/user.png")
+                      }
+                      onError={() => setFotoClienteErro(true)}
                     />
                   </View>
                   <View style={configuracaoStyle.textoSaudacao}>
                     <Text style={configuracaoStyle.tituloSaudacao}>
-                      Olá, Cliente
+                      Olá, {cliente?.nome_cliente ?? "Cliente"}
                     </Text>
                     <Text style={configuracaoStyle.subtituloSaudacao}>
                       Acesse e organize sua experiência no app.

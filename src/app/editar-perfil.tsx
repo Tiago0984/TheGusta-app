@@ -2,7 +2,7 @@ import FooterScreen from "@/app/footer";
 import globalStyle from "@/styles/globalStyle";
 import editarPerfilStyle from "@/styles/editarPerfilStyle";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Image,
   ImageBackground,
@@ -15,8 +15,43 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { cores } from "@/styles/variaveis";
 
+import { IMAGEM } from "@/config/api";
+import { useCliente } from "@/hooks/use-cliente";
+
+// Converte a data do banco (aaaa-mm-dd) para dd/mm/aaaa
+function formatarData(data?: string) {
+  if (!data) {
+    return "";
+  }
+  const [ano, mes, dia] = data.slice(0, 10).split("-");
+  return `${dia}/${mes}/${ano}`;
+}
+
 export default function EditarPerfilScreen() {
   const [notificacoesAtivas, setNotificacoesAtivas] = useState(true);
+
+  // Dados do cliente carregados da API (Editar perfil)
+  const cliente = useCliente();
+  const [fotoClienteErro, setFotoClienteErro] = useState(false);
+  const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [documento, setDocumento] = useState("");
+  const [dataNascimento, setDataNascimento] = useState("");
+
+  useEffect(() => {
+    if (!cliente) {
+      return;
+    }
+    setNome(cliente.nome_cliente ?? "");
+    setEmail(cliente.email_cliente ?? "");
+    setTelefone(cliente.telefone_cliente ?? "");
+    setDocumento(cliente.cpf_cnpj_cliente ?? "");
+    setDataNascimento(formatarData(cliente.data_nasc_cliente));
+  }, [cliente]);
+
+  // CNPJ tem 14 digitos, CPF tem 11
+  const ehCnpj = documento.replace(/\D/g, "").length > 11;
 
   return (
     <View style={globalStyle.container}>
@@ -62,7 +97,12 @@ export default function EditarPerfilScreen() {
                     <View style={editarPerfilStyle.bordaPerfil}>
                       <Image
                         style={editarPerfilStyle.imgPerfil}
-                        source={require("@/assets/images/img/user.png")}
+                        source={
+                          cliente?.foto_cliente && !fotoClienteErro
+                            ? { uri: `${IMAGEM}/${cliente.foto_cliente}` }
+                            : require("@/assets/images/img/user.png")
+                        }
+                        onError={() => setFotoClienteErro(true)}
                       />
                     </View>
                     <View style={editarPerfilStyle.textoFoto}>
@@ -95,6 +135,9 @@ export default function EditarPerfilScreen() {
                         style={editarPerfilStyle.campoInput}
                         placeholder="Seu nome completo aqui"
                         placeholderTextColor={cores.cinza}
+                        value={nome}
+                        onChangeText={setNome}
+                        maxLength={50}
                       />
                     </View>
                   </View>
@@ -111,6 +154,8 @@ export default function EditarPerfilScreen() {
                         placeholder="seuemail@exemplo.com"
                         placeholderTextColor={cores.cinza}
                         keyboardType="email-address"
+                        value={email}
+                        editable={false}
                       />
                     </View>
                   </View>
@@ -129,6 +174,9 @@ export default function EditarPerfilScreen() {
                         placeholder="(11) 99999-9999"
                         placeholderTextColor={cores.cinza}
                         keyboardType="phone-pad"
+                        value={telefone}
+                        onChangeText={setTelefone}
+                        maxLength={15}
                       />
                     </View>
                   </View>
@@ -139,12 +187,16 @@ export default function EditarPerfilScreen() {
                       source={require("@/assets/images/img/documento.png")}
                     />
                     <View style={editarPerfilStyle.campoTextos}>
-                      <Text style={editarPerfilStyle.campoLabel}>CPF</Text>
+                      <Text style={editarPerfilStyle.campoLabel}>
+                        {ehCnpj ? "CNPJ" : "CPF"}
+                      </Text>
                       <TextInput
                         style={editarPerfilStyle.campoInput}
                         placeholder="000.000.000-00"
                         placeholderTextColor={cores.cinza}
                         keyboardType="numeric"
+                        value={documento}
+                        editable={false}
                       />
                     </View>
                   </View>
@@ -162,6 +214,10 @@ export default function EditarPerfilScreen() {
                         style={editarPerfilStyle.campoInput}
                         placeholder="dd/mm/aaaa"
                         placeholderTextColor={cores.cinza}
+                        keyboardType="numeric"
+                        value={dataNascimento}
+                        onChangeText={setDataNascimento}
+                        maxLength={10}
                       />
                     </View>
                   </View>

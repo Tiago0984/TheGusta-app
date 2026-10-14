@@ -15,13 +15,19 @@ import globalStyle from "@/styles/globalStyle";
 import homeStyle from "@/styles/homeStyle";
 import { cores } from "@/styles/variaveis";
 import FooterScreen from "@/app/footer";
+import { useCliente } from "@/hooks/use-cliente";
 
 import { IMAGEM } from "@/config/api";
-import { ApiError, getBanners, getCategorias, getProdutos } from "@/services/api";
-
-
+import {
+  ApiError,
+  getBanners,
+  getCategorias,
+  getProdutos,
+} from "@/services/api";
 
 export default function HomeScreen() {
+  const cliente = useCliente();
+  const [fotoClienteErro, setFotoClienteErro] = useState(false);
   const [favoritos, setFavoritos] = useState([false, false, false]);
   const [produtos, setProdutos] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
@@ -180,11 +186,18 @@ export default function HomeScreen() {
           <ScrollView style={globalStyle.scrollConteudo}>
             <View style={homeStyle.header}>
               <View style={homeStyle.conteudo}>
-                <Text style={homeStyle.titulo}>Olá, Cliente</Text>
+                <Text style={homeStyle.titulo}>
+                  Olá, {cliente?.nome_cliente ?? "Cliente"}
+                </Text>
                 <View style={homeStyle.bordaPerfil}>
                   <Image
                     style={homeStyle.perfil}
-                    source={require("@/assets/images/img/user.png")}
+                    source={
+                      cliente?.foto_cliente && !fotoClienteErro
+                        ? { uri: `${IMAGEM}/${cliente.foto_cliente}` }
+                        : require("@/assets/images/img/user.png")
+                    }
+                    onError={() => setFotoClienteErro(true)}
                   />
                 </View>
               </View>
@@ -226,172 +239,178 @@ export default function HomeScreen() {
                 </View>
               ) : (
                 <>
-              <View
-                style={homeStyle.areaBanner}
-                onLayout={(event) =>
-                  setLarguraBanner(event.nativeEvent.layout.width)
-                }
-              >
-                {banners.length > 0 ? (
-                  <ScrollView
-                    horizontal
-                    pagingEnabled
-                    showsHorizontalScrollIndicator={false}
+                  <View
+                    style={homeStyle.areaBanner}
+                    onLayout={(event) =>
+                      setLarguraBanner(event.nativeEvent.layout.width)
+                    }
                   >
-                    {banners.map((banner) => {
-                      const semFoto =
-                        bannerSemImagem.includes(banner.id_banner) ||
-                        !banner.foto_banner;
+                    {banners.length > 0 ? (
+                      <ScrollView
+                        horizontal
+                        pagingEnabled
+                        showsHorizontalScrollIndicator={false}
+                      >
+                        {banners.map((banner) => {
+                          const semFoto =
+                            bannerSemImagem.includes(banner.id_banner) ||
+                            !banner.foto_banner;
 
-                      return (
-                        <Image
-                          key={banner.id_banner}
-                          style={[
-                            homeStyle.banner,
-                            { width: larguraBanner },
-                            semFoto && homeStyle.bannerVazio,
-                          ]}
-                          resizeMode={semFoto ? "contain" : "cover"}
-                          source={
-                            semFoto
-                              ? require("@/assets/images/img/sem-imagem.png")
-                              : { uri: `${IMAGEM}/${banner.foto_banner}` }
-                          }
-                          onError={() => {
-                            setBannerSemImagem((imagem) => [
-                              ...imagem,
-                              banner.id_banner,
-                            ]);
-                          }}
-                        />
-                      );
-                    })}
-                  </ScrollView>
-                ) : (
-                  <Image
-                    style={[homeStyle.banner, homeStyle.bannerVazio]}
-                    source={require("@/assets/images/img/sem-imagem.png")}
-                    resizeMode="contain"
-                  />
-                )}
-              </View>
-
-              <View style={homeStyle.categoria}>
-                <Text style={homeStyle.tituloSecao}>Categoria</Text>
-
-                <View style={homeStyle.conteudoCategoria}>
-                  {categoriasComProdutos.map((categoria, indice) => (
-                    <Pressable
-                      key={categoria.id_categoria}
-                      onPress={() =>
-                        router.push({
-                          pathname: "/cardapio",
-                          params: {
-                            categoria: categoria.id_categoria.toString(),
-                          },
-                        })
-                      }
-                      style={[
-                        homeStyle.itemCategoria,
-                        (indice + 1) % 3 !== 0 && homeStyle.espacoCategoria,
-                      ]}
-                    >
-                      <Text style={homeStyle.txtCategoria}>
-                        {categoria.nome_categoria}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-
-                <View style={homeStyle.destaque}>
-                  <Text style={homeStyle.tituloSecao}>Destaques</Text>
-                  {produtosEmDestaque.length > 0 ? (
-                    <ScrollView
-                      contentContainerStyle={homeStyle.conteudoDestaque}
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                    >
-                      {/* CARD QUE IRA SE REPETIR */}
-                      {produtosEmDestaque.map((produto) => (
-                        <View
-                          key={produto.id_produto}
-                          style={homeStyle.itemDestaque}
-                        >
-                          <View style={homeStyle.caixaImagem}>
+                          return (
                             <Image
-                              style={homeStyle.imgDestaque}
+                              key={banner.id_banner}
+                              style={[
+                                homeStyle.banner,
+                                { width: larguraBanner },
+                                semFoto && homeStyle.bannerVazio,
+                              ]}
+                              resizeMode={semFoto ? "contain" : "cover"}
                               source={
-                                semImagem.includes(produto.id_produto) ||
-                                !produto.foto_produto
-                                  ? { uri: `${IMAGEM}/produto/sem-imagem.png` }
-                                  : { uri: `${IMAGEM}/${produto.foto_produto}` }
+                                semFoto
+                                  ? require("@/assets/images/img/sem-imagem.png")
+                                  : { uri: `${IMAGEM}/${banner.foto_banner}` }
                               }
                               onError={() => {
-                                setSemImagem((imagem) => [
+                                setBannerSemImagem((imagem) => [
                                   ...imagem,
-                                  produto.id_produto,
+                                  banner.id_banner,
                                 ]);
                               }}
                             />
-                            <Pressable
-                              style={homeStyle.btnFavorito}
-                              onPress={() =>
-                                alterarFavorito(produto.id_produto)
-                              }
+                          );
+                        })}
+                      </ScrollView>
+                    ) : (
+                      <Image
+                        style={[homeStyle.banner, homeStyle.bannerVazio]}
+                        source={require("@/assets/images/img/sem-imagem.png")}
+                        resizeMode="contain"
+                      />
+                    )}
+                  </View>
+
+                  <View style={homeStyle.categoria}>
+                    <Text style={homeStyle.tituloSecao}>Categoria</Text>
+
+                    <View style={homeStyle.conteudoCategoria}>
+                      {categoriasComProdutos.map((categoria, indice) => (
+                        <Pressable
+                          key={categoria.id_categoria}
+                          onPress={() =>
+                            router.push({
+                              pathname: "/cardapio",
+                              params: {
+                                categoria: categoria.id_categoria.toString(),
+                              },
+                            })
+                          }
+                          style={[
+                            homeStyle.itemCategoria,
+                            (indice + 1) % 3 !== 0 && homeStyle.espacoCategoria,
+                          ]}
+                        >
+                          <Text style={homeStyle.txtCategoria}>
+                            {categoria.nome_categoria}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+
+                    <View style={homeStyle.destaque}>
+                      <Text style={homeStyle.tituloSecao}>Destaques</Text>
+                      {produtosEmDestaque.length > 0 ? (
+                        <ScrollView
+                          contentContainerStyle={homeStyle.conteudoDestaque}
+                          horizontal
+                          showsHorizontalScrollIndicator={false}
+                        >
+                          {/* CARD QUE IRA SE REPETIR */}
+                          {produtosEmDestaque.map((produto) => (
+                            <View
+                              key={produto.id_produto}
+                              style={homeStyle.itemDestaque}
                             >
-                              <Text style={homeStyle.txtFavorito}>
-                                {produto.favorito ? "★" : "☆"}
-                              </Text>
-                            </Pressable>
-                          </View>
-                          <View style={homeStyle.infoDestaque}>
-                            <Text style={homeStyle.txtDestaque}>
-                              {produto.nome_produto}
-                            </Text>
-                            <Text style={homeStyle.txtDescricao}>
-                              {produto.descricao_produto}
-                            </Text>
-                            <View style={homeStyle.rodapeDestaque}>
-                              {/* <Text style={homeStyle.precoDestaque}>
+                              <View style={homeStyle.caixaImagem}>
+                                <Image
+                                  style={homeStyle.imgDestaque}
+                                  source={
+                                    semImagem.includes(produto.id_produto) ||
+                                    !produto.foto_produto
+                                      ? {
+                                          uri: `${IMAGEM}/produto/sem-imagem.png`,
+                                        }
+                                      : {
+                                          uri: `${IMAGEM}/${produto.foto_produto}`,
+                                        }
+                                  }
+                                  onError={() => {
+                                    setSemImagem((imagem) => [
+                                      ...imagem,
+                                      produto.id_produto,
+                                    ]);
+                                  }}
+                                />
+                                <Pressable
+                                  style={homeStyle.btnFavorito}
+                                  onPress={() =>
+                                    alterarFavorito(produto.id_produto)
+                                  }
+                                >
+                                  <Text style={homeStyle.txtFavorito}>
+                                    {produto.favorito ? "★" : "☆"}
+                                  </Text>
+                                </Pressable>
+                              </View>
+                              <View style={homeStyle.infoDestaque}>
+                                <Text style={homeStyle.txtDestaque}>
+                                  {produto.nome_produto}
+                                </Text>
+                                <Text style={homeStyle.txtDescricao}>
+                                  {produto.descricao_produto}
+                                </Text>
+                                <View style={homeStyle.rodapeDestaque}>
+                                  {/* <Text style={homeStyle.precoDestaque}>
                            R$ {Number(produto.valor_produto).toFixed(2).replace(".",",")}
                           </Text> */}
-                              <Text style={homeStyle.precoDestaque}>
-                                {Number(produto.valor_produto).toLocaleString(
-                                  "pt-BR",
-                                  { style: "currency", currency: "BRL" },
-                                )}
-                              </Text>
-                              <Pressable
-                                style={homeStyle.btnDetalhes}
-                                onPress={() =>
-                                  router.push({
-                                    pathname: "/detalhe-produto",
-                                    params: {
-                                      slug: produto.slug_produto,
-                                    },
-                                  })
-                                }
-                              >
-                                <Image
-                                  style={homeStyle.imgDetalhes}
-                                  source={require("@/assets/images/img/mais.png")}
-                                />
-                              </Pressable>
+                                  <Text style={homeStyle.precoDestaque}>
+                                    {Number(
+                                      produto.valor_produto,
+                                    ).toLocaleString("pt-BR", {
+                                      style: "currency",
+                                      currency: "BRL",
+                                    })}
+                                  </Text>
+                                  <Pressable
+                                    style={homeStyle.btnDetalhes}
+                                    onPress={() =>
+                                      router.push({
+                                        pathname: "/detalhe-produto",
+                                        params: {
+                                          slug: produto.slug_produto,
+                                        },
+                                      })
+                                    }
+                                  >
+                                    <Image
+                                      style={homeStyle.imgDetalhes}
+                                      source={require("@/assets/images/img/mais.png")}
+                                    />
+                                  </Pressable>
+                                </View>
+                              </View>
                             </View>
-                          </View>
+                          ))}
+                          {/* FINAL DO CARD */}
+                        </ScrollView>
+                      ) : (
+                        <View style={homeStyle.semDestaque}>
+                          <Text style={homeStyle.txtSemDestaque}>
+                            Nenhum produto em destaque
+                          </Text>
                         </View>
-                      ))}
-                      {/* FINAL DO CARD */}
-                    </ScrollView>
-                  ) : (
-                    <View style={homeStyle.semDestaque}>
-                      <Text style={homeStyle.txtSemDestaque}>
-                        Nenhum produto em destaque
-                      </Text>
+                      )}
                     </View>
-                  )}
-                </View>
-              </View>
+                  </View>
                 </>
               )}
             </View>
