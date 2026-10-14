@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState } from "react";
 
 import {
@@ -14,9 +15,73 @@ import {
 import LoginStyle from "@/styles/loginStyle";
 import globalStyle from "@/styles/globalStyle";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { API } from "@/config/api";
 
 export default function LoginScreen() {
   const [verSenha, setVerSenha] = useState(false);
+
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [mensagem, setMensagem] = useState("");
+  const [carregando, setCarregando] = useState(false);
+
+  async function mostrarMensagem(texto: string) {
+    setMensagem(texto);
+
+    setTimeout(() => {
+      setMensagem("");
+    }, 5000);
+  }
+
+  async function nomeDoDispositivo() {
+    let id = await AsyncStorage.getItem("device_id");
+    if (!id) {
+      id = `app-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      await AsyncStorage.setItem("device_id", id);
+    }
+    return id;
+  }
+
+  async function fazerLogin() {
+    if (!email.trim() || !senha) {
+      mostrarMensagem("Informe e-mail e senha.");
+      return;
+    }
+
+    setCarregando(true);
+
+    try {
+      const resposta = await fetch(`${API}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          senha: senha,
+          device_name: await nomeDoDispositivo(),
+        }),
+      });
+
+      const json = await resposta.json();
+
+      // 401 senha errada | 403 inativo | 422 campos | 429 tentativas
+      if (!resposta.ok || !json.success) {
+        mostrarMensagem(json.message);
+        return;
+      }
+
+      await AsyncStorage.setItem("token", json.data.token);
+
+      router.replace("/home");
+    } catch (erro) {
+      console.log("Erro ao realizar login:", erro);
+      mostrarMensagem("Não foi possível conectar ao servidor.");
+    } finally {
+      setCarregando(false);
+    }
+  }
 
   return (
     <View style={globalStyle.container}>
@@ -51,6 +116,8 @@ export default function LoginScreen() {
                     keyboardType="email-address"
                     autoCapitalize="none"
                     style={LoginStyle.TextInput}
+                    value={email}
+                    onChangeText={setEmail}
                   />
                 </View>
 
@@ -64,6 +131,8 @@ export default function LoginScreen() {
                     placeholderTextColor="#888888"
                     style={LoginStyle.TextInput}
                     secureTextEntry={!verSenha}
+                    value={senha}
+                    onChangeText={setSenha}
                   />
 
                   <Pressable
@@ -95,7 +164,8 @@ export default function LoginScreen() {
                     LoginStyle.btnEntrar,
                     pressed && LoginStyle.btnEntrarPressed,
                   ]}
-                  onPress={() => router.navigate("/home")}
+                  onPress={fazerLogin}
+                  disabled={carregando}
                 >
                   <Text style={LoginStyle.txtEntrar}>Entrar</Text>
                 </Pressable>
