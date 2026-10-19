@@ -1,11 +1,15 @@
 import FooterScreen from "@/app/footer";
 import globalStyle from "@/styles/globalStyle";
 import editarPerfilStyle from "@/styles/editarPerfilStyle";
+import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
+  Alert,
   Image,
   ImageBackground,
+  Modal,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -30,6 +34,58 @@ function formatarData(data?: string) {
 export default function EditarPerfilScreen() {
   const [notificacoesAtivas, setNotificacoesAtivas] = useState(true);
 
+  const [modalFoto, setModalFoto] = useState(false);
+  const [imagem, setImagem] = useState<string | null>(null);
+
+  // Abre o modal para escolher entre câmera e galeria
+  const escolherFoto = () => {
+    setModalFoto(true);
+  };
+
+  // Abre a câmera (precisa de permissão, menos no navegador)
+  const tirarFoto = async () => {
+    setModalFoto(false);
+
+    if (Platform.OS !== "web") {
+      const permissao = await ImagePicker.requestCameraPermissionsAsync();
+
+      if (!permissao.granted) {
+        Alert.alert(
+          "Permissão necessária",
+          "É necessário permitir o acesso à câmera.",
+        );
+        return;
+      }
+    }
+
+    const resultado = await ImagePicker.launchCameraAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!resultado.canceled) {
+      setImagem(resultado.assets[0].uri);
+    }
+  };
+
+  // Abre a galeria (não precisa de permissão)
+  const selecionarGaleria = async () => {
+    setModalFoto(false);
+
+    const resultado = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!resultado.canceled) {
+      setImagem(resultado.assets[0].uri);
+    }
+  };
+
   // Dados do cliente carregados da API (Editar perfil)
   const cliente = useCliente();
   const [fotoClienteErro, setFotoClienteErro] = useState(false);
@@ -38,6 +94,65 @@ export default function EditarPerfilScreen() {
   const [telefone, setTelefone] = useState("");
   const [documento, setDocumento] = useState("");
   const [dataNascimento, setDataNascimento] = useState("");
+
+  const [erro, setErro] = useState("");
+
+  // Formatar data padrão Brasil (dd/mm/aaaa) e validar se é uma data válida
+  function mascaraData(texto: string) {
+    let numeros = texto.replace(/\D/g, "").slice(0, 8); // Só números, até 8 dígitos
+
+    if (numeros.length > 4) {
+      numeros = numeros.replace(/(\d{2})(\d{2})(\d{1,4})/, "$1/$2/$3");
+    } else if (numeros.length > 2) {
+      numeros = numeros.replace(/(\d{2})(\d{1,2})/, "$1/$2");
+    }
+
+    setDataNascimento(numeros);
+    setErro("");
+
+    if (numeros.length === 10 && !validarData(numeros)) {
+      setErro("Informe uma data válida");
+    }
+  }
+
+  // Validar a data seguindo os padrões de meses e anos Bissextos
+  function validarData(valor: string): boolean {
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(valor)) {
+      return false;
+    }
+    const [dia, mes, ano] = valor.split("/").map(Number);
+
+    if (ano < 1 || mes < 1 || mes > 12 || dia < 1) {
+      return false;
+    }
+
+    // Não aceita data no futuro
+    const hoje = new Date();
+    const dataInformada = new Date(ano, mes - 1, dia);
+    if (dataInformada > hoje) {
+      return false;
+    }
+
+    // Calcular os anos bissextos
+    const bissexto = ano % 4 === 0 && (ano % 100 !== 0 || ano % 400 === 0);
+
+    const diasMes = [
+      31, 
+      bissexto ? 29 : 28, 
+      31, 
+      30, 
+      31, 
+      30, 
+      31, 
+      31, 
+      30, 
+      31, 
+      30, 
+      31
+    ];
+    return dia <= diasMes[mes - 1];
+  }
+
 
   useEffect(() => {
     if (!cliente) {
@@ -98,9 +213,11 @@ export default function EditarPerfilScreen() {
                       <Image
                         style={editarPerfilStyle.imgPerfil}
                         source={
-                          cliente?.foto_cliente && !fotoClienteErro
-                            ? { uri: `${IMAGEM}/${cliente.foto_cliente}` }
-                            : require("@/assets/images/img/user.png")
+                          imagem
+                            ? { uri: imagem }
+                            : cliente?.foto_cliente && !fotoClienteErro
+                              ? { uri: `${IMAGEM}/${cliente.foto_cliente}` }
+                              : require("@/assets/images/img/user.png")
                         }
                         onError={() => setFotoClienteErro(true)}
                       />
@@ -114,7 +231,10 @@ export default function EditarPerfilScreen() {
                       </Text>
                     </View>
                   </View>
-                  <Pressable style={editarPerfilStyle.btnAdicionarFoto}>
+                  <Pressable
+                    style={editarPerfilStyle.btnAdicionarFoto}
+                    onPress={escolherFoto}
+                  >
                     <Text style={editarPerfilStyle.txtAdicionarFoto}>
                       Adicionar foto
                     </Text>
@@ -166,9 +286,7 @@ export default function EditarPerfilScreen() {
                       source={require("@/assets/images/img/telefone.png")}
                     />
                     <View style={editarPerfilStyle.campoTextos}>
-                      <Text style={editarPerfilStyle.campoLabel}>
-                        Telefone
-                      </Text>
+                      <Text style={editarPerfilStyle.campoLabel}>Telefone</Text>
                       <TextInput
                         style={editarPerfilStyle.campoInput}
                         placeholder="(11) 99999-9999"
@@ -216,9 +334,22 @@ export default function EditarPerfilScreen() {
                         placeholderTextColor={cores.cinza}
                         keyboardType="numeric"
                         value={dataNascimento}
-                        onChangeText={setDataNascimento}
+                        onChangeText={mascaraData}
                         maxLength={10}
+                        onBlur={() => {
+                          // Ao sair do campo, avisa também se a data ficou incompleta
+                          if (
+                            dataNascimento.length > 0 &&
+                            (dataNascimento.length < 10 ||
+                              !validarData(dataNascimento))
+                          ) {
+                            setErro("Informe uma data válida");
+                          }
+                        }}
                       />
+                      {erro !== "" && (
+                        <Text style={editarPerfilStyle.txtErro}>{erro}</Text>
+                      )}
                     </View>
                   </View>
                 </View>
@@ -239,9 +370,7 @@ export default function EditarPerfilScreen() {
                     </View>
                   </View>
                   <Pressable
-                    onPress={() =>
-                      setNotificacoesAtivas((atual) => !atual)
-                    }
+                    onPress={() => setNotificacoesAtivas((atual) => !atual)}
                   >
                     <Image
                       style={editarPerfilStyle.imgSwitch}
@@ -266,6 +395,52 @@ export default function EditarPerfilScreen() {
               </View>
             </View>
           </ScrollView>
+
+          <Modal
+            visible={modalFoto}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setModalFoto(false)}
+          >
+            <View style={editarPerfilStyle.fundoModal}>
+              <View style={editarPerfilStyle.cardModal}>
+                <Text style={editarPerfilStyle.tituloModal}>
+                  Adicionar foto
+                </Text>
+                <Text style={editarPerfilStyle.subtituloModal}>
+                  Como deseja adicionar sua foto?
+                </Text>
+
+                <Pressable
+                  style={editarPerfilStyle.btnModal}
+                  onPress={tirarFoto}
+                >
+                  <Text style={editarPerfilStyle.txtBtnModal}>
+                    📷 Tirar foto
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  style={editarPerfilStyle.btnModal}
+                  onPress={selecionarGaleria}
+                >
+                  <Text style={editarPerfilStyle.txtBtnModal}>
+                    🖼️ Escolher da galeria
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  style={editarPerfilStyle.btnCancelarModal}
+                  onPress={() => setModalFoto(false)}
+                >
+                  <Text style={editarPerfilStyle.txtCancelarModal}>
+                    Cancelar
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          </Modal>
+
           <FooterScreen />
         </SafeAreaView>
       </ImageBackground>

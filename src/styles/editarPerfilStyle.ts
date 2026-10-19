@@ -251,6 +251,80 @@ const editarPerfilStyle = StyleSheet.create({
     color: cores.preto,
     fontFamily: fontes.negrito,
   },
+
+  txtErro: {
+    marginTop: 2,
+    fontSize: 13,
+    color: "#D32F2F",
+    fontFamily: fontes.comum,
+  },
+
+  fundoModal: {
+    flex: 1,
+    backgroundColor: cores.preto80,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+  },
+
+  cardModal: {
+    width: "100%",
+    maxWidth: 400,
+    backgroundColor: cores.laranjaclaro,
+    borderColor: cores.laranja,
+    borderWidth: 3,
+    borderRadius: 20,
+    padding: 20,
+    alignItems: "center",
+  },
+
+  tituloModal: {
+    fontSize: 24,
+    color: cores.laranja,
+    fontFamily: fontes.negrito,
+  },
+
+  subtituloModal: {
+    marginTop: 8,
+    marginBottom: 20,
+    fontSize: 15,
+    color: cores.cinza,
+    fontFamily: fontes.comum,
+  },
+
+  btnModal: {
+    width: "100%",
+    height: 50,
+    borderColor: cores.laranja,
+    borderWidth: 1,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+
+  txtBtnModal: {
+    fontSize: 16,
+    color: cores.preto,
+    fontFamily: fontes.comum,
+  },
+
+  btnCancelarModal: {
+    width: "50%",
+    height: 45,
+    borderColor: cores.laranja,
+    borderWidth: 1,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 4,
+  },
+
+  txtCancelarModal: {
+    fontSize: 15,
+    color: cores.cinza,
+    fontFamily: fontes.comum,
+  },
 });
 
 export default editarPerfilStyle;
