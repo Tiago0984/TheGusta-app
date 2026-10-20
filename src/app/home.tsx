@@ -67,9 +67,10 @@ export default function HomeScreen() {
         produtosAtivos.filter((produto) => produto.destaque_produto === "SIM"),
       );
 
-      const categoriasAtivas = categoriasData
-        .filter((categoria) => categoria.status_categoria === "ATIVO")
-        .sort((a, b) => a.ordem_categoria - b.ordem_categoria);
+      // A API já devolve as categorias em ordem alfabética
+      const categoriasAtivas = categoriasData.filter(
+        (categoria) => categoria.status_categoria === "ATIVO",
+      );
       setCategorias(categoriasAtivas);
 
       const bannersAtivos = bannersData.filter(

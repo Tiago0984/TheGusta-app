@@ -4,8 +4,9 @@ export interface Categoria {
   id_categoria: number;
   nome_categoria: string;
   descricao_categoria: string | null;
-  ordem_categoria: number;
   status_categoria: "ATIVO" | "INATIVO";
+  criado_em_categoria?: string;
+  atualizado_em_categoria?: string;
 }
 
 export interface Produto {
@@ -15,17 +16,14 @@ export interface Produto {
   slug_produto: string;
   descricao_produto: string;
   tamanho_produto: string;
-  unid_medida_produto: string;
+  unid_med_produto: string;
   valor_produto: number;
   foto_produto: string | null;
   status_produto: "ATIVO" | "INATIVO";
   destaque_produto: "SIM" | "NAO";
-  ordem_produto: number;
-  categoria_produto?: {
-    id_categoria: number;
-    nome_categoria: string;
-    descricao_categoria?: string;
-  };
+  criado_em_produto?: string;
+  atualizado_em_produto?: string;
+  categoria_produto?: Categoria;
 }
 
 export interface Banner {

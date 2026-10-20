@@ -49,9 +49,10 @@ export default function CardapioScreen() {
         .sort((a, b) => a.nome_produto.localeCompare(b.nome_produto));
       setProdutos(produtosAtivos);
 
-      const categoriasAtivas = categoriasData
-        .filter((categoria) => categoria.status_categoria === "ATIVO")
-        .sort((a, b) => a.ordem_categoria - b.ordem_categoria);
+      // A API já devolve as categorias em ordem alfabética
+      const categoriasAtivas = categoriasData.filter(
+        (categoria) => categoria.status_categoria === "ATIVO",
+      );
       setCategorias(categoriasAtivas);
     } catch (error) {
       console.log("Erro ao carregar os dados do cardápio", error);
