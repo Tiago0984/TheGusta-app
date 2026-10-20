@@ -259,6 +259,22 @@ const editarPerfilStyle = StyleSheet.create({
     fontFamily: fontes.comum,
   },
 
+  txtMensagemErro: {
+    marginTop: 15,
+    fontSize: 15,
+    color: "#D32F2F",
+    fontFamily: fontes.comum,
+    textAlign: "center",
+  },
+
+  txtSucesso: {
+    marginTop: 15,
+    fontSize: 15,
+    color: cores.verde,
+    fontFamily: fontes.comum,
+    textAlign: "center",
+  },
+
   fundoModal: {
     flex: 1,
     backgroundColor: cores.preto80,

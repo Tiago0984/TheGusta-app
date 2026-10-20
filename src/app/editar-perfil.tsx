@@ -1,4 +1,5 @@
 import FooterScreen from "@/app/footer";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import globalStyle from "@/styles/globalStyle";
 import editarPerfilStyle from "@/styles/editarPerfilStyle";
 import * as ImagePicker from "expo-image-picker";
@@ -19,7 +20,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { cores } from "@/styles/variaveis";
 
-import { IMAGEM } from "@/config/api";
+import { API, IMAGEM } from "@/config/api";
 import { useCliente } from "@/hooks/use-cliente";
 
 // Converte a data do banco (aaaa-mm-dd) para dd/mm/aaaa
@@ -29,6 +30,49 @@ function formatarData(data?: string) {
   }
   const [ano, mes, dia] = data.slice(0, 10).split("-");
   return `${dia}/${mes}/${ano}`;
+}
+
+// Máscara de CPF (000.000.000-00) até 11 dígitos
+// e de CNPJ (00.000.000/0000-00) de 12 a 14 dígitos
+function mascaraCpfCnpj(texto: string) {
+  let numeros = texto.replace(/\D/g, "").slice(0, 14); // Só números
+
+  if (numeros.length > 12) {
+    numeros = numeros.replace(
+      /(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})/,
+      "$1.$2.$3/$4-$5",
+    );
+  } else if (numeros.length > 11) {
+    numeros = numeros.replace(/(\d{2})(\d{3})(\d{3})(\d{4})/, "$1.$2.$3/$4");
+  } else if (numeros.length > 9) {
+    numeros = numeros.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, "$1.$2.$3-$4");
+  } else if (numeros.length > 6) {
+    numeros = numeros.replace(/(\d{3})(\d{3})(\d{1,3})/, "$1.$2.$3");
+  } else if (numeros.length > 3) {
+    numeros = numeros.replace(/(\d{3})(\d{1,3})/, "$1.$2");
+  }
+
+  return numeros;
+}
+
+// Máscara de telefone sem espaço, como a API espera: (11)99999-0000
+function mascaraTelefone(texto: string) {
+  const numeros = texto.replace(/\D/g, "").slice(0, 11); // Só números
+  const ddd = numeros.slice(0, 2);
+
+  if (numeros.length > 10) {
+    return `(${ddd})${numeros.slice(2, 7)}-${numeros.slice(7)}`;
+  }
+  if (numeros.length > 6) {
+    return `(${ddd})${numeros.slice(2, 6)}-${numeros.slice(6)}`;
+  }
+  if (numeros.length > 2) {
+    return `(${ddd})${numeros.slice(2)}`;
+  }
+  if (numeros.length > 0) {
+    return `(${numeros}`;
+  }
+  return "";
 }
 
 export default function EditarPerfilScreen() {
@@ -97,6 +141,11 @@ export default function EditarPerfilScreen() {
 
   const [erro, setErro] = useState("");
 
+  // Mensagem do botão Salvar (erro ou sucesso)
+  const [mensagem, setMensagem] = useState("");
+  const [sucesso, setSucesso] = useState(false);
+  const [salvando, setSalvando] = useState(false);
+
   // Formatar data padrão Brasil (dd/mm/aaaa) e validar se é uma data válida
   function mascaraData(texto: string) {
     let numeros = texto.replace(/\D/g, "").slice(0, 8); // Só números, até 8 dígitos
@@ -160,13 +209,93 @@ export default function EditarPerfilScreen() {
     }
     setNome(cliente.nome_cliente ?? "");
     setEmail(cliente.email_cliente ?? "");
-    setTelefone(cliente.telefone_cliente ?? "");
-    setDocumento(cliente.cpf_cnpj_cliente ?? "");
+    setTelefone(mascaraTelefone(cliente.telefone_cliente ?? ""));
+    setDocumento(mascaraCpfCnpj(cliente.cpf_cnpj_cliente ?? ""));
     setDataNascimento(formatarData(cliente.data_nasc_cliente));
   }, [cliente]);
 
   // CNPJ tem 14 digitos, CPF tem 11
   const ehCnpj = documento.replace(/\D/g, "").length > 11;
+
+  function mostrarMensagem(texto: string, deuCerto = false) {
+    setMensagem(texto);
+    setSucesso(deuCerto);
+  }
+
+  // Envia o cadastro completo para a API (PUT /cliente exige os 6 campos)
+  async function salvarPerfil() {
+    const digitosTelefone = telefone.replace(/\D/g, "");
+    const digitosDocumento = documento.replace(/\D/g, "");
+
+    if (!nome.trim()) {
+      mostrarMensagem("Informe o seu nome.");
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      mostrarMensagem("Informe um e-mail válido.");
+      return;
+    }
+    if (digitosTelefone.length < 10) {
+      mostrarMensagem("Informe um telefone válido com DDD.");
+      return;
+    }
+    if (digitosDocumento.length !== 11 && digitosDocumento.length !== 14) {
+      mostrarMensagem("Informe o CPF (11 dígitos) ou o CNPJ (14 dígitos).");
+      return;
+    }
+    if (!validarData(dataNascimento)) {
+      mostrarMensagem("Informe uma data de nascimento válida.");
+      return;
+    }
+
+    // dd/mm/aaaa -> aaaa-mm-dd
+    const [dia, mes, ano] = dataNascimento.split("/");
+
+    setSalvando(true);
+    mostrarMensagem("");
+
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const resposta = await fetch(`${API}/cliente`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          nome_cliente: nome.trim(),
+          tipo_cliente: digitosDocumento.length === 14 ? "PJ" : "PF",
+          cpf_cnpj_cliente: documento,
+          data_nasc_cliente: `${ano}-${mes}-${dia}`,
+          email_cliente: email.trim(),
+          telefone_cliente: telefone,
+        }),
+      });
+
+      const json = await resposta.json();
+
+      // 401: "Sessão expirada. Faça login novamente."
+      if (resposta.status === 401) {
+        await AsyncStorage.removeItem("token");
+        router.replace("/");
+        return;
+      }
+
+      // 422: e-mail ou CPF já usados, campo inválido...
+      if (!resposta.ok || !json.success) {
+        mostrarMensagem(json.message);
+        return;
+      }
+
+      mostrarMensagem(json.message, true); // "Dados atualizados com sucesso."
+    } catch (error) {
+      console.log("Erro ao salvar perfil:", error);
+      mostrarMensagem("Não foi possível conectar ao servidor.");
+    } finally {
+      setSalvando(false);
+    }
+  }
 
   return (
     <View style={globalStyle.container}>
@@ -274,8 +403,10 @@ export default function EditarPerfilScreen() {
                         placeholder="seuemail@exemplo.com"
                         placeholderTextColor={cores.cinza}
                         keyboardType="email-address"
+                        autoCapitalize="none"
                         value={email}
-                        editable={false}
+                        onChangeText={setEmail}
+                        maxLength={80}
                       />
                     </View>
                   </View>
@@ -289,12 +420,14 @@ export default function EditarPerfilScreen() {
                       <Text style={editarPerfilStyle.campoLabel}>Telefone</Text>
                       <TextInput
                         style={editarPerfilStyle.campoInput}
-                        placeholder="(11) 99999-9999"
+                        placeholder="(11)99999-9999"
                         placeholderTextColor={cores.cinza}
                         keyboardType="phone-pad"
                         value={telefone}
-                        onChangeText={setTelefone}
-                        maxLength={15}
+                        onChangeText={(texto) =>
+                          setTelefone(mascaraTelefone(texto))
+                        }
+                        maxLength={14}
                       />
                     </View>
                   </View>
@@ -314,7 +447,10 @@ export default function EditarPerfilScreen() {
                         placeholderTextColor={cores.cinza}
                         keyboardType="numeric"
                         value={documento}
-                        editable={false}
+                        onChangeText={(texto) =>
+                          setDocumento(mascaraCpfCnpj(texto))
+                        }
+                        maxLength={18}
                       />
                     </View>
                   </View>
@@ -383,9 +519,25 @@ export default function EditarPerfilScreen() {
                   </Pressable>
                 </View>
 
-                <Pressable style={editarPerfilStyle.btnSalvar}>
+                {mensagem !== "" && (
+                  <Text
+                    style={
+                      sucesso
+                        ? editarPerfilStyle.txtSucesso
+                        : editarPerfilStyle.txtMensagemErro
+                    }
+                  >
+                    {mensagem}
+                  </Text>
+                )}
+
+                <Pressable
+                  style={editarPerfilStyle.btnSalvar}
+                  onPress={salvarPerfil}
+                  disabled={salvando}
+                >
                   <Text style={editarPerfilStyle.txtSalvar}>
-                    Salvar alterações
+                    {salvando ? "Salvando..." : "Salvar alterações"}
                   </Text>
                 </Pressable>
 
