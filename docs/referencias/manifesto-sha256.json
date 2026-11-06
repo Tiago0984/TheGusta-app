@@ -1,0 +1,45 @@
+{
+  "data": "2026-11-06",
+  "arquivos": [
+    {
+      "arquivo": "Atualizar foto perfil.pdf",
+      "bytes": 174235,
+      "sha256": "997d5a2f4425661428355f79044310d60d799532239dcd59b26031a41332fa1e"
+    },
+    {
+      "arquivo": "Criar Conta - The Gusta - APP.pdf",
+      "bytes": 284428,
+      "sha256": "c4b301f8d96f955d9ac527ba13d328c2829a20dfcbd89b638a3c7b44d50d6784"
+    },
+    {
+      "arquivo": "Detalhe_Produto_Favoritos.pdf",
+      "bytes": 251029,
+      "sha256": "727f07007b6f84f312412ca1764f40191b81668d12bba9761f3aa187402349c9"
+    },
+    {
+      "arquivo": "Documentação Detalhes do Pedido.pdf",
+      "bytes": 253472,
+      "sha256": "699cffcde5055a0534efb7c3974ce73a6087d491130d90000584eb45c1521da1"
+    },
+    {
+      "arquivo": "Documentação Tela de Pagamento.pdf",
+      "bytes": 4183786,
+      "sha256": "95e3eb87725d20feb2fd4665e28ffe5a1e5955fd1c5a761a2ce2631608100bac"
+    },
+    {
+      "arquivo": "Documentação Tela Sacola.pdf",
+      "bytes": 192801,
+      "sha256": "c25a164ed88307edf8ab3f1622785bbf0719f1a24724b72587c18ecb9bd33bc4"
+    },
+    {
+      "arquivo": "Favoritos_Cardapio e Home.pdf",
+      "bytes": 123157,
+      "sha256": "964088631e79470c39b974662b9d597566c89c20205084b7cdd6e112ce0bee48"
+    },
+    {
+      "arquivo": "Guia Esqueci a Senha e Redefinição.pdf",
+      "bytes": 276639,
+      "sha256": "9618053e4a13166a13a2ba6c55637c20bba5443a1aa2544fc50cb7ddf6139e81"
+    }
+  ]
+}
