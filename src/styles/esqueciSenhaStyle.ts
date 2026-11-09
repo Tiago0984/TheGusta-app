@@ -1,9 +1,14 @@
 import { StyleSheet } from "react-native";
 
 import { cores } from "./variaveis";
-import { fontes } from "./variaveis";
 
 const esqueciSenhaStyle = StyleSheet.create({
+  erroSolicitacao: {
+    color: "#B42318",
+    fontSize: 14,
+    textAlign: "center",
+    marginTop: 12,
+  },
   conteudo: {
     flex: 1,
     alignItems: "center",
@@ -53,7 +58,8 @@ const esqueciSenhaStyle = StyleSheet.create({
   },
 
   TextInput: {
-    width: "100%",
+    flex: 1,
+    minWidth: 0,
   },
 
   btnEnviar: {

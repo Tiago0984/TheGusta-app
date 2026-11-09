@@ -1,9 +1,40 @@
-import { StyleSheet, TextInput } from "react-native";
+import { StyleSheet } from "react-native";
 
-import { cores } from "./variaveis";
-import { fontes } from "./variaveis";
+import { cores, fontes } from "./variaveis";
 
 const redefinirSenhaStyle = StyleSheet.create({
+  linhaCodigo: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 12,
+    marginVertical: 16,
+  },
+  campoCodigo: {
+    width: 48,
+    height: 52,
+    borderWidth: 2,
+    borderColor: cores.laranja,
+    borderRadius: 10,
+    fontSize: 24,
+    textAlign: "center",
+    fontFamily: fontes.negrito,
+    color: cores.preto,
+  },
+  erroSenha: {
+    color: "#B42318",
+    fontSize: 14,
+    textAlign: "center",
+    marginTop: 12,
+  },
+  btnNovoCodigo: {
+    paddingVertical: 12,
+    marginBottom: 12,
+  },
+  txtNovoCodigo: {
+    color: cores.laranja,
+    textDecorationLine: "underline",
+    fontSize: 16,
+  },
   conteudo: {
     flex: 1,
     alignItems: "center",
@@ -53,7 +84,8 @@ const redefinirSenhaStyle = StyleSheet.create({
   },
 
   TextInput: {
-    width: "100%",
+    flex: 1,
+    minWidth: 0,
   },
 
   btnMostrarSenha: {

@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -17,13 +17,38 @@ import cadClienteStyle from "@/styles/cadClienteStyle";
 import globalStyle from "@/styles/globalStyle";
 
 import TermosUsoModal from "@/components/termosUsoModal";
+import { cadastrarCliente } from "@/services/auth";
 
 export default function CadClienteScreen() {
   const [verSenha, setVerSenha] = useState(false);
   const [verConfirmarSenha, setVerConfirmarSenha] = useState(false);
-  const [AceitarTermos, setVerAceitarTermos] = useState(false);
+  const [aceitarTermos, setAceitarTermos] = useState(false);
 
   const [modalTermosUso, setModalTermosUso] = useState(false);
+  const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [senha, setSenha] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
+  const [carregando, setCarregando] = useState(false);
+  const [mensagem, setMensagem] = useState("");
+  const envioPendente = useRef(false);
+
+  async function cadastrar() {
+    if (envioPendente.current) return;
+    envioPendente.current = true;
+    setCarregando(true);
+    setMensagem("");
+    try {
+      await cadastrarCliente({ nome, email, telefone, senha, confirmarSenha, aceitarTermos });
+      router.replace("/home");
+    } catch (erro) {
+      setMensagem(erro instanceof Error ? erro.message : "Não foi possível criar sua conta. Tente novamente.");
+    } finally {
+      envioPendente.current = false;
+      setCarregando(false);
+    }
+  }
 
   return (
     <View style={globalStyle.container}>
@@ -33,7 +58,7 @@ export default function CadClienteScreen() {
         resizeMode="cover"
       >
         <SafeAreaView style={globalStyle.areaConteudo}>
-          <ScrollView style={globalStyle.scrollConteudo}>
+          <ScrollView style={globalStyle.scrollConteudo} keyboardShouldPersistTaps="handled">
             <View style={cadClienteStyle.conteudo}>
               <Image
                 source={require("@/assets/images/img/logo.png")}
@@ -44,7 +69,7 @@ export default function CadClienteScreen() {
                 cadastre-se para fazer seus pedidos
               </Text>
 
-              {/* Formulario de login */}
+              {/* Formulário de cadastro */}
               <View style={cadClienteStyle.form}>
                 <View style={cadClienteStyle.input}>
                   <Image
@@ -54,6 +79,10 @@ export default function CadClienteScreen() {
 
                   <TextInput
                     placeholder="Nome completo"
+                    value={nome}
+                    onChangeText={setNome}
+                    editable={!carregando}
+                    autoComplete="name"
                     placeholderTextColor="#888888"
                     style={cadClienteStyle.TextInput}
                   />
@@ -67,6 +96,11 @@ export default function CadClienteScreen() {
 
                   <TextInput
                     placeholder="E-mail"
+                    value={email}
+                    onChangeText={setEmail}
+                    editable={!carregando}
+                    autoComplete="email"
+                    autoCorrect={false}
                     placeholderTextColor="#888888"
                     keyboardType="email-address"
                     autoCapitalize="none"
@@ -81,7 +115,11 @@ export default function CadClienteScreen() {
                   />
 
                   <TextInput
-                    placeholder="Telefone"
+                    placeholder="Telefone com DDD"
+                    value={telefone}
+                    onChangeText={setTelefone}
+                    editable={!carregando}
+                    autoComplete="tel"
                     placeholderTextColor="#888888"
                     keyboardType="phone-pad"
                     style={cadClienteStyle.TextInput}
@@ -95,6 +133,12 @@ export default function CadClienteScreen() {
                   />
                   <TextInput
                     placeholder="Senha"
+                    value={senha}
+                    onChangeText={setSenha}
+                    editable={!carregando}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    autoComplete="new-password"
                     placeholderTextColor="#888888"
                     style={cadClienteStyle.TextInput}
                     secureTextEntry={!verSenha}
@@ -122,6 +166,13 @@ export default function CadClienteScreen() {
                   />
                   <TextInput
                     placeholder="Confirmar Senha"
+                    value={confirmarSenha}
+                    onChangeText={setConfirmarSenha}
+                    editable={!carregando}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    autoComplete="new-password"
+                    onSubmitEditing={cadastrar}
                     placeholderTextColor="#888888"
                     style={cadClienteStyle.TextInput}
                     secureTextEntry={!verConfirmarSenha}
@@ -145,15 +196,20 @@ export default function CadClienteScreen() {
                 <View style={cadClienteStyle.termosUso}>
                   <Pressable
                     style={cadClienteStyle.btnTermos}
-                    onPress={() => setVerAceitarTermos((current) => !current)}
+                    onPress={() => setAceitarTermos((current) => !current)}
+                    disabled={carregando}
+                    accessibilityRole="checkbox"
+                    accessibilityLabel="Aceitar os termos de uso"
+                    aria-checked={aceitarTermos}
+                    aria-disabled={carregando}
                   >
                     <View
                       style={[
                         cadClienteStyle.checkTermos,
-                        AceitarTermos && cadClienteStyle.checkTermosAtivo,
+                        aceitarTermos && cadClienteStyle.checkTermosAtivo,
                       ]}
                     >
-                      {AceitarTermos && (
+                      {aceitarTermos && (
                         <Text style={cadClienteStyle.checkOK}>✓</Text>
                       )}
                     </View>
@@ -161,25 +217,34 @@ export default function CadClienteScreen() {
                   <Text
                     style={[
                       cadClienteStyle.txtTermos,
-                      AceitarTermos && cadClienteStyle.termoAceito,
+                      aceitarTermos && cadClienteStyle.termoAceito,
                     ]}
                   >
                     Aceito os{" "}
                   </Text>
-                  <Pressable onPress={() => setModalTermosUso(true)}>
+                  <Pressable onPress={() => setModalTermosUso(true)} disabled={carregando}>
                     <Text style={cadClienteStyle.linkTermos}>
                       Termos de uso
                     </Text>
                   </Pressable>
                 </View>
 
+                {mensagem ? (
+                  <Text style={cadClienteStyle.erroCadastro} accessibilityRole="alert">{mensagem}</Text>
+                ) : null}
+
                 <Pressable
+                  onPress={cadastrar}
+                  disabled={carregando}
+                  accessibilityRole="button"
+                  aria-disabled={carregando}
+                  aria-busy={carregando}
                   style={({ pressed }) => [
                     cadClienteStyle.btnEntrar,
                     pressed && cadClienteStyle.btnEntrarPressed,
                   ]}
                 >
-                  <Text style={cadClienteStyle.txtEntrar}>Criar Conta</Text>
+                  <Text style={cadClienteStyle.txtEntrar}>{carregando ? "Cadastrando..." : "Criar Conta"}</Text>
                 </Pressable>
 
                 <View style={cadClienteStyle.Separador}>
@@ -194,6 +259,7 @@ export default function CadClienteScreen() {
                     pressed && cadClienteStyle.btnCriarContaPressed,
                   ]}
                   onPress={() => router.navigate("/")}
+                  disabled={carregando}
                 >
                   <Text style={cadClienteStyle.txtCriarConta}>Já tenho conta</Text>
                 </Pressable>
@@ -202,8 +268,8 @@ export default function CadClienteScreen() {
           </ScrollView>
 
           <TermosUsoModal
-          visible={modalTermosUso}
-          onClose={() => setModalTermosUso(false)}          
+            visible={modalTermosUso}
+            onClose={() => setModalTermosUso(false)}
           />
 
         </SafeAreaView>

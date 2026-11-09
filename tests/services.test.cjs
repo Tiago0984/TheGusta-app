@@ -240,3 +240,165 @@ test("falha de atualização mantém dados anteriores e expõe erro para nova te
   assert.match(servico.estadoCliente().erro, /conectar ao servidor/);
   assert.equal(servico.estadoCliente().carregando, false);
 });
+
+const cadastro = {
+  nome: "Cliente de teste",
+  email: "teste@example.com",
+  telefone: "(11)99999-0000",
+  senha: "senha-teste",
+  confirmarSenha: "senha-teste",
+  aceitarTermos: true,
+};
+const redefinicao = {
+  email: "teste@example.com",
+  codigo: "0123",
+  novaSenha: "nova-senha-teste",
+  confirmarSenha: "nova-senha-teste",
+};
+
+test("cadastro envia o contrato público e inicia a sessão sem salvar senha ou cache de cliente", async () => {
+  const app = ambiente(() => resposta({ token: "sessao-cadastro", cliente: { ...cliente, data_nasc_cliente: null } }), { device_id: "dispositivo-cadastro" });
+  await app.carregar("services/auth").cadastrarCliente({ ...cadastro, nome: " Cliente de teste ", email: " teste@example.com " });
+  const chamada = app.chamadas[0];
+  assert.ok(chamada.url.endsWith("/auth/cadastro"));
+  assert.equal(chamada.method, "POST");
+  assert.equal(chamada.headers.get("Authorization"), null);
+  assert.deepEqual(JSON.parse(chamada.body), {
+    nome: cadastro.nome,
+    email: cadastro.email,
+    telefone: cadastro.telefone,
+    senha: cadastro.senha,
+    aceite_termo: true,
+    device_name: "dispositivo-cadastro",
+  });
+  assert.equal(app.armazenamento.get("token"), "sessao-cadastro");
+  assert.equal(app.armazenamento.has("cliente"), false);
+  assert.equal(app.armazenamento.has("senha"), false);
+});
+
+for (const [nome, alteracoes, mensagem] of [
+  ["nome vazio", { nome: "  " }, "Preencha todos os campos."],
+  ["e-mail vazio", { email: "" }, "Preencha todos os campos."],
+  ["telefone vazio", { telefone: "" }, "Preencha todos os campos."],
+  ["e-mail inválido", { email: "email-invalido" }, "Informe um e-mail válido."],
+  ["telefone incompleto", { telefone: "1199" }, "Informe um telefone válido com DDD."],
+  ["telefone com letras", { telefone: "abc11999990000" }, "Informe um telefone válido com DDD."],
+  ["senha curta", { senha: "1234567", confirmarSenha: "1234567" }, "A senha deve ter pelo menos 8 caracteres."],
+  ["confirmação ausente", { confirmarSenha: "" }, "Preencha todos os campos."],
+  ["senhas divergentes", { confirmarSenha: "senha-diferente" }, "As senhas não correspondem."],
+  ["termos recusados", { aceitarTermos: false }, "Aceite os termos de uso para continuar."],
+]) {
+  test(`cadastro rejeita ${nome} antes de enviar dados`, async () => {
+    const app = ambiente(() => { throw new Error("Não deveria enviar"); });
+    await assert.rejects(app.carregar("services/auth").cadastrarCliente({ ...cadastro, ...alteracoes }), { message: mensagem });
+    assert.equal(app.chamadas.length, 0);
+    assert.equal(app.armazenamento.has("token"), false);
+  });
+}
+
+test("cadastro recusado não inicia sessão nem esconde a mensagem da API", async () => {
+  const app = ambiente(() => resposta(null, 422, "E-mail já cadastrado."));
+  await assert.rejects(app.carregar("services/auth").cadastrarCliente(cadastro), { status: 422, message: "E-mail já cadastrado." });
+  assert.equal(app.armazenamento.has("token"), false);
+});
+
+test("cadastro com sucesso sem token não inicia uma sessão inválida", async () => {
+  const app = ambiente(() => resposta({ cliente }));
+  await assert.rejects(app.carregar("services/auth").cadastrarCliente(cadastro), { message: "A API não retornou uma sessão válida." });
+  assert.equal(app.armazenamento.has("token"), false);
+});
+
+test("solicitação de código envia e-mail normalizado sem expor mensagem de sucesso da API", async () => {
+  const app = ambiente(() => resposta(undefined, 200, "Mensagem específica do servidor"), { token: "sessao-existente" });
+  const resultado = await app.carregar("services/auth").solicitarCodigo(" teste@example.com ");
+  assert.equal(resultado, undefined);
+  assert.ok(app.chamadas[0].url.endsWith("/auth/esqueci-senha"));
+  assert.equal(app.chamadas[0].method, "POST");
+  assert.deepEqual(JSON.parse(app.chamadas[0].body), { email: "teste@example.com" });
+  assert.equal(app.chamadas[0].headers.get("Authorization"), null);
+  assert.equal(app.armazenamento.get("token"), "sessao-existente");
+});
+
+for (const email of ["", "  ", "sem-arroba", "nome@@example.com"]) {
+  test(`solicitação rejeita e-mail inválido ${JSON.stringify(email)} sem enviar`, async () => {
+    const app = ambiente(() => { throw new Error("Não deveria enviar"); });
+    await assert.rejects(app.carregar("services/auth").solicitarCodigo(email), { name: "ApiError" });
+    assert.equal(app.chamadas.length, 0);
+  });
+}
+
+test("limite de solicitações não gera reenvio automático", async () => {
+  const app = ambiente(() => resposta(null, 429, "Aguarde para solicitar outro código."));
+  await assert.rejects(app.carregar("services/auth").solicitarCodigo(cadastro.email), { status: 429 });
+  assert.equal(app.chamadas.length, 1);
+});
+
+for (const [nome, alteracoes] of [
+  ["e-mail ausente", { email: "" }],
+  ["e-mail inválido", { email: "sem-arroba" }],
+  ["código incompleto", { codigo: "123" }],
+  ["código longo", { codigo: "12345" }],
+  ["código com letras", { codigo: "12a3" }],
+  ["nova senha vazia", { novaSenha: "" }],
+  ["confirmação vazia", { confirmarSenha: "" }],
+  ["senha curta", { novaSenha: "1234567", confirmarSenha: "1234567" }],
+  ["senhas divergentes", { confirmarSenha: "outra-senha" }],
+]) {
+  test(`redefinição rejeita ${nome} antes de consumir o código`, async () => {
+    const app = ambiente(() => { throw new Error("Não deveria enviar"); });
+    await assert.rejects(app.carregar("services/auth").redefinirSenha({ ...redefinicao, ...alteracoes }), { name: "ApiError" });
+    assert.equal(app.chamadas.length, 0);
+  });
+}
+
+test("redefinição valida o código antes de salvar e mantém o reset_token fora da sessão", async () => {
+  const validacaoIniciada = adiada();
+  const retornoValidacao = adiada();
+  const app = ambiente((url) => {
+    if (url.endsWith("/auth/validar-codigo")) {
+      validacaoIniciada.resolver();
+      return retornoValidacao.promessa;
+    }
+    return resposta(undefined);
+  }, { token: "sessao-anterior" });
+  const pendente = app.carregar("services/auth").redefinirSenha({ ...redefinicao, email: " teste@example.com " });
+  await validacaoIniciada.promessa;
+  assert.equal(app.chamadas.length, 1);
+  assert.deepEqual(JSON.parse(app.chamadas[0].body), { email: "teste@example.com", codigo: "0123" });
+  retornoValidacao.resolver(resposta({ reset_token: "token-apenas-redefinicao" }));
+  await pendente;
+  assert.equal(app.chamadas.length, 2);
+  assert.ok(app.chamadas[1].url.endsWith("/auth/redefinir-senha"));
+  assert.deepEqual(JSON.parse(app.chamadas[1].body), {
+    reset_token: "token-apenas-redefinicao",
+    nova_senha: redefinicao.novaSenha,
+    nova_senha_confirmation: redefinicao.confirmarSenha,
+  });
+  assert.ok(app.chamadas.every((chamada) => chamada.headers.get("Authorization") === null));
+  assert.equal(app.armazenamento.get("token"), "sessao-anterior");
+  assert.equal(app.armazenamento.has("reset_token"), false);
+  assert.equal(app.navegacoes.length, 0);
+});
+
+for (const data of [undefined, {}, { reset_token: "" }, { reset_token: 123 }]) {
+  test(`redefinição interrompe resposta sem reset_token válido ${JSON.stringify(data)}`, async () => {
+    const app = ambiente(() => resposta(data));
+    await assert.rejects(app.carregar("services/auth").redefinirSenha(redefinicao), { message: "Token de redefinição não recebido. Solicite um novo código." });
+    assert.equal(app.chamadas.length, 1);
+    assert.equal(app.armazenamento.has("reset_token"), false);
+  });
+}
+
+test("código inválido ou expirado impede o segundo POST", async () => {
+  const app = ambiente(() => resposta(null, 422, "Código inválido ou expirado."));
+  await assert.rejects(app.carregar("services/auth").redefinirSenha(redefinicao), { status: 422, message: "Código inválido ou expirado." });
+  assert.equal(app.chamadas.length, 1);
+});
+
+test("falha no salvamento da nova senha não simula sucesso nem tenta novamente", async () => {
+  const app = ambiente((url) => url.endsWith("/auth/validar-codigo")
+    ? resposta({ reset_token: "redefinicao" }) : resposta(null, 422, "A senha não foi aceita."));
+  await assert.rejects(app.carregar("services/auth").redefinirSenha(redefinicao), { status: 422, message: "A senha não foi aceita." });
+  assert.equal(app.chamadas.length, 2);
+  assert.equal(app.armazenamento.size, 0);
+});

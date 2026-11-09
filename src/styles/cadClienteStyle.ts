@@ -1,9 +1,14 @@
-import { StyleSheet, TextInput } from "react-native";
+import { StyleSheet } from "react-native";
 
 import { cores } from "./variaveis";
-import { fontes } from "./variaveis";
 
 const cadClienteStyle = StyleSheet.create({
+  erroCadastro: {
+    color: "#B42318",
+    fontSize: 14,
+    textAlign: "center",
+    marginTop: 12,
+  },
   conteudo: {
     flex: 1,
     alignItems: "center",
@@ -51,7 +56,8 @@ const cadClienteStyle = StyleSheet.create({
   },
 
   TextInput: {
-    width: "100%",
+    flex: 1,
+    minWidth: 0,
   },
 
   btnMostrarSenha: {

@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -16,9 +16,33 @@ import {
 import esqueciSenhaStyle from "@/styles/esqueciSenhaStyle";
 import globalStyle from "@/styles/globalStyle";
 import LinkSenhaModal from "@/components/linkSenhaModal";
+import { solicitarCodigo } from "@/services/auth";
 
 export default function EsqueciSenhaScreen() {
-  const [modalLinkSenha, setModalLinkSenha] = useState(false);
+  const [modalCodigo, setModalCodigo] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailEnviado, setEmailEnviado] = useState("");
+  const [carregando, setCarregando] = useState(false);
+  const [mensagem, setMensagem] = useState("");
+  const envioPendente = useRef(false);
+
+  async function enviarCodigo() {
+    if (envioPendente.current || modalCodigo) return;
+    envioPendente.current = true;
+    setCarregando(true);
+    setMensagem("");
+    try {
+      const destino = email.trim();
+      await solicitarCodigo(destino);
+      setEmailEnviado(destino);
+      setModalCodigo(true);
+    } catch (erro) {
+      setMensagem(erro instanceof Error ? erro.message : "Não foi possível solicitar o código. Tente novamente.");
+    } finally {
+      envioPendente.current = false;
+      setCarregando(false);
+    }
+  }
 
   return (
     <View style={globalStyle.container}>
@@ -28,7 +52,7 @@ export default function EsqueciSenhaScreen() {
         resizeMode="cover"
       >
         <SafeAreaView style={globalStyle.areaConteudo}>
-          <ScrollView style={globalStyle.scrollConteudo}>
+          <ScrollView style={globalStyle.scrollConteudo} keyboardShouldPersistTaps="handled">
             <View style={esqueciSenhaStyle.conteudo}>
               <Image
                 source={require("@/assets/images/img/logo.png")}
@@ -38,7 +62,7 @@ export default function EsqueciSenhaScreen() {
                 Esqueci minha senha
               </Text>
               <Text style={esqueciSenhaStyle.subtitulo}>
-                Informe seu e-mail para receber {'\n'} o link de redefinição
+                Informe seu e-mail para receber {'\n'} o código de verificação
               </Text>
 
               <View style={esqueciSenhaStyle.form}>
@@ -50,6 +74,12 @@ export default function EsqueciSenhaScreen() {
 
                   <TextInput
                     placeholder="E-mail"
+                    value={email}
+                    onChangeText={setEmail}
+                    editable={!carregando && !modalCodigo}
+                    autoComplete="email"
+                    autoCorrect={false}
+                    onSubmitEditing={enviarCodigo}
                     placeholderTextColor="#888888"
                     keyboardType="email-address"
                     autoCapitalize="none"
@@ -57,14 +87,22 @@ export default function EsqueciSenhaScreen() {
                   />
                 </View>
 
+                {mensagem ? (
+                  <Text style={esqueciSenhaStyle.erroSolicitacao} accessibilityRole="alert">{mensagem}</Text>
+                ) : null}
+
                 <Pressable
                   style={({ pressed }) => [
                     esqueciSenhaStyle.btnEnviar,
                     pressed && esqueciSenhaStyle.btnEnviarPressed,
                   ]}
-                  onPress={() => setModalLinkSenha(true)}
+                  onPress={enviarCodigo}
+                  disabled={carregando || modalCodigo}
+                  accessibilityRole="button"
+                  aria-disabled={carregando || modalCodigo}
+                  aria-busy={carregando}
                 >
-                  <Text style={esqueciSenhaStyle.txtEnviar}>Enviar link</Text>
+                  <Text style={esqueciSenhaStyle.txtEnviar}>{carregando ? "Enviando..." : "Enviar código"}</Text>
                 </Pressable>
 
                 <Pressable
@@ -73,6 +111,7 @@ export default function EsqueciSenhaScreen() {
                     pressed && esqueciSenhaStyle.btnVoltarPressed,
                   ]}
                   onPress={() => router.navigate("/")}
+                  disabled={carregando}
                 >
                   <Text style={esqueciSenhaStyle.txtVoltar}>
                     Voltar ao login
@@ -83,10 +122,10 @@ export default function EsqueciSenhaScreen() {
           </ScrollView>
 
           <LinkSenhaModal
-            visible={modalLinkSenha}
+            visible={modalCodigo}
             onClose={() => {
-                router.navigate("/");
-                setModalLinkSenha(false);
+              setModalCodigo(false);
+              router.push({ pathname: "/redefinir-senha", params: { email: emailEnviado } });
             }}
           />
         </SafeAreaView>
