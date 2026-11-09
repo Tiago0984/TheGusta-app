@@ -29,7 +29,9 @@ export interface PaginaPedidos {
   total: number;
 }
 let sessao = 0;
-observarSessao(() => { sessao += 1; });
+const revisoes = new Map<number, number>();
+const cancelamentos = new Map<number, object>();
+observarSessao(() => { sessao += 1; revisoes.clear(); cancelamentos.clear(); });
 const invalido = () => new ApiError("A API retornou um histórico inválido. Atualize os pedidos.");
 function objeto(valor: unknown): Record<string, unknown> {
   if (!valor || typeof valor !== "object" || Array.isArray(valor)) throw invalido();
@@ -110,4 +112,127 @@ export function formatarDataPedido(valor: string | null) {
   if (!/^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/.test(valor)) return "Não informada";
   const data = new Date(valor);
   return Number.isNaN(data.getTime()) ? "Não informada" : data.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+}
+
+export interface ItemPedido extends ItemHistorico {
+  valor_unit_item: number;
+  status_item: string | null;
+}
+export interface EnderecoPedido {
+  nome_endereco: string; endereco: string; numero: string;
+  complemento: string | null; bairro: string | null; cidade: string | null; uf: string | null; cep: string | null;
+}
+export interface PedidoDetalhado extends Omit<PedidoHistorico, "itens"> {
+  itens: ItemPedido[];
+  subtotal_venda: number;
+  valor_desconto_venda: number;
+  forma_pagamento_venda: string;
+  observacao_venda: string | null;
+  endereco: EnderecoPedido | null;
+  cupom: { codigo_cupom: string } | null;
+}
+export interface StatusPedidoAtual {
+  id_venda: number; status_venda: string; status_descricao_venda: string; atualizado_em_venda: string | null;
+}
+function validarIdPedido(id: number) {
+  if (!Number.isSafeInteger(id) || id <= 0) throw new ApiError("Pedido inválido.");
+}
+function dinheiro(valor: unknown) {
+  const preco = numero(valor);
+  if (preco < 0 || !Number.isSafeInteger(Math.round(preco * 100))) throw invalido();
+  return preco;
+}
+function textoNulo(valor: unknown) {
+  if (valor == null) return null;
+  if (typeof valor !== "string") throw invalido();
+  return valor;
+}
+function normalizarDetalhe(valor: unknown, id: number): PedidoDetalhado {
+  try {
+    const dados = objeto(valor);
+    const base = normalizarPedido(dados);
+    if (base.id_venda !== id) throw invalido();
+    const itens = base.itens.map((item, indice) => {
+      const dadosItem = objeto((dados.itens as unknown[])[indice]);
+      const preco = dinheiro(dadosItem.valor_unit_item);
+      if (!Number.isSafeInteger(Math.round(preco * 100) * item.qtde_item)) throw invalido();
+      return { ...item, valor_unit_item: preco, status_item: textoNulo(dadosItem.status_item) };
+    });
+    let endereco: EnderecoPedido | null = null;
+    if (dados.endereco != null) {
+      const e = objeto(dados.endereco);
+      endereco = { nome_endereco: texto(e.nome_endereco), endereco: texto(e.endereco), numero: texto(e.numero),
+        complemento: textoNulo(e.complemento), bairro: textoNulo(e.bairro), cidade: textoNulo(e.cidade), uf: textoNulo(e.uf), cep: textoNulo(e.cep) };
+    }
+    const cupom = dados.cupom == null ? null : { codigo_cupom: texto(objeto(dados.cupom).codigo_cupom) };
+    return { ...base, itens, endereco, cupom, subtotal_venda: dinheiro(dados.subtotal_venda),
+      valor_desconto_venda: dinheiro(dados.valor_desconto_venda), forma_pagamento_venda: texto(dados.forma_pagamento_venda),
+      observacao_venda: textoNulo(dados.observacao_venda) };
+  } catch { throw new ApiError("A API retornou um pedido inválido. Tente atualizar o pedido."); }
+}
+function normalizarStatus(valor: unknown, id: number): StatusPedidoAtual {
+  try {
+    const dados = objeto(valor);
+    const status = texto(dados.status_venda);
+    if (inteiro(dados.id_venda) !== id) throw invalido();
+    return { id_venda: id, status_venda: status,
+      status_descricao_venda: typeof dados.status_descricao_venda === "string" && dados.status_descricao_venda.trim()
+        ? dados.status_descricao_venda : statusPedidos[status as StatusPedido] ?? status,
+      atualizado_em_venda: textoNulo(dados.atualizado_em_venda) };
+  } catch { throw new ApiError("A API retornou um status de pedido inválido."); }
+}
+async function lerPedido(id: number, somenteStatus: boolean) {
+  validarIdPedido(id);
+  const versao = sessao;
+  const revisao = revisoes.get(id) ?? 0;
+  const token = await lerToken();
+  if (versao !== sessao) throw new ApiError("A sessão foi alterada. Tente novamente.", 409);
+  const { data } = await apiRequest<unknown>(`/pedidos/${id}${somenteStatus ? "/status" : ""}`, { autenticado: true, tokenEsperado: token });
+  if (versao !== sessao || revisao !== (revisoes.get(id) ?? 0)) throw new ApiError("O pedido foi alterado. Atualize a tela.", 409);
+  return data;
+}
+export async function consultarPedido(id: number): Promise<PedidoDetalhado> {
+  return normalizarDetalhe(await lerPedido(id, false), id);
+}
+export async function consultarStatusPedido(id: number): Promise<StatusPedidoAtual> {
+  return normalizarStatus(await lerPedido(id, true), id);
+}
+export async function cancelarPedido(id: number): Promise<StatusPedidoAtual> {
+  validarIdPedido(id);
+  if (cancelamentos.has(id)) throw new ApiError("Aguarde o cancelamento em andamento.");
+  const bloqueio = {};
+  const versao = sessao;
+  cancelamentos.set(id, bloqueio);
+  revisoes.set(id, (revisoes.get(id) ?? 0) + 1);
+  try {
+    const token = await lerToken();
+    if (versao !== sessao) throw new ApiError("A sessão foi alterada. Tente novamente.", 409);
+    const { data } = await apiRequest<unknown>(`/pedidos/${id}/cancelar`, { autenticado: true, tokenEsperado: token, method: "PUT" });
+    if (versao !== sessao) throw new ApiError("A sessão foi alterada. Tente novamente.", 409);
+    // A documentação permite resposta resumida; não depende de outro GET para confirmar.
+    const status = normalizarStatus(data, id);
+    if (status.status_venda !== "CANCELADO") throw new ApiError("O cancelamento não foi confirmado. Atualize o pedido antes de tentar novamente.");
+    return status;
+  } finally {
+    if (cancelamentos.get(id) === bloqueio) {
+      cancelamentos.delete(id);
+      revisoes.set(id, (revisoes.get(id) ?? 0) + 1);
+    }
+  }
+}
+
+export function acompanhamentoPedido(status: string, entrega: "SIM" | "NAO") {
+  if (status === "CANCELADO") return [];
+  const ordem = ["PENDENTE", "CONFIRMADO", "EM_PREPARO", "PRONTO", "EM_ENTREGA", "ENTREGUE"];
+  const indice = ordem.indexOf(status);
+  if (indice < 0) return [];
+  const etapas = [
+    { codigo: "EM_PREPARO", texto: "Em preparo" },
+    { codigo: "PRONTO", texto: entrega === "SIM" ? "Pronto para envio" : "Pronto para retirada" },
+    ...(entrega === "SIM" ? [{ codigo: "EM_ENTREGA", texto: "Saiu para entrega" }] : []),
+    { codigo: "ENTREGUE", texto: entrega === "SIM" ? "Entrega realizada" : "Retirada concluída" },
+  ];
+  return etapas.map((etapa) => ({ ...etapa,
+    estado: status === "ENTREGUE" || ordem.indexOf(etapa.codigo) < indice ? "concluida" : etapa.codigo === status ? "atual" : "aguardando",
+  }));
 }

@@ -1,6 +1,6 @@
 # Progresso da implementação
 
-Última atualização: **09/11/2026**. As entregas 1–5 do app foram implementadas e validadas localmente. Endereços e histórico seguem a documentação do professor definida pelo usuário; as rotas ainda serão acrescentadas ao backend do projeto. A próxima entrega é a consulta real dos detalhes do pedido.
+Última atualização: **09/11/2026**. As entregas 1–6 do app foram implementadas e validadas com API simulada. O usuário relatou testes locais aprovados de endereços/pedidos e favoritos/foto no backend, ainda sem commit/publicação. A próxima entrega do app é o checkout; integração com o servidor publicado e dispositivos continua pendente.
 
 Plano de referência: [plano-implementacao-pdfs.md](plano-implementacao-pdfs.md). Instalação e contexto: [CONTINUAR-AQUI.md](../CONTINUAR-AQUI.md). Materiais: [referencias/README.md](referencias/README.md).
 
@@ -11,7 +11,7 @@ Marque uma entrega somente após implementar e validar seus critérios de aceite
 - [x] **3 — Foto e favoritos:** upload validado e sincronização do cliente; consulta/adição/remoção de favoritos em Home, Cardápio e Detalhe com erros e bloqueios. Serviços e navegador com API simulada aprovados; API real e câmera/permissões em dispositivo ainda pendentes.
 - [x] **4 — Sacola:** armazenamento por cliente, adição/união/quantidade/remoção, limite 1–99, estados de carregamento/erro/vazio e subtotal real. Serviços e navegador com API simulada aprovados; persistência no dispositivo e API real ainda precisam de homologação. Integração do pagamento permanece na entrega 7.
 - [x] **5 — Dependências do checkout:** consulta/cadastro/edição/principal/exclusão de endereços, seleção por sessão e histórico com filtros/paginação e ID para detalhe. Contratos da documentação do professor definidos pelo usuário; serviços e navegador com API simulada aprovados. Backend e dispositivos ainda pendentes de homologação.
-- [ ] **6 — Detalhes reais:** consulta por ID, dados/totais/status/modalidade reais, nulos, cancelamento e erros.
+- [x] **6 — Detalhes reais:** consulta por ID, itens/totais/modalidade/status reais, nulos, atualização leve de status, cancelamento confirmado e erros. Serviços e navegador com API simulada aprovados; integração com o backend publicado ainda pendente.
 - [ ] **7 — Checkout:** agendamento, payload real, POST do pedido, total confirmado, limpeza da sacola e WhatsApp posterior ao registro sem duplicidade.
 - [ ] **8 — Homologação:** critérios do plano exercitados, verificações de código e resultados registrados por plataforma.
 
@@ -19,19 +19,19 @@ Dependências adicionais para uma conta nova comprar com entrega:
 
 - [x] Confirmar contratos para criar/editar endereços: documentação do professor indicada pelo usuário em 09/11/2026, registrada em [contratos-enderecos-pedidos.md](contratos-enderecos-pedidos.md).
 - [x] Integrar `enderecos.tsx` e `editar-endereco.tsx` para cadastro e seleção no app, validados com API simulada. A conexão com pagamento fica na entrega 7; retirada deve funcionar sem endereço.
-- [ ] Disponibilizar e homologar essas rotas no backend do projeto. O usuário informou que ainda serão implementadas.
+- [ ] Publicar e homologar essas rotas no servidor do projeto. O usuário relatou implementação e testes locais, ainda sem commit/publicação; ver [publicacao-backend.md](publicacao-backend.md).
 
 **Registro da retomada**
 
 | Campo | Situação atual |
 | --- | --- |
-| Última entrega concluída | 5 — Endereços e histórico, validada localmente em 09/11/2026 |
+| Última entrega concluída | 6 — Detalhes/status/cancelamento do pedido, validada localmente em 09/11/2026 |
 | Entrega em andamento | Nenhuma |
-| Próxima ação | Entrega 6: GET do pedido por ID, itens/totais/modalidade/status reais, nulos, cancelamento e erros, seguindo a documentação do professor |
+| Próxima ação | Entrega 7: checkout com sacola/endereço, modalidade, agendamento, POST, total confirmado e ações posteriores sem duplicidade |
 | Base do código auditado | `cc4b1d6bd88186c8c2c5d24e955f336ae9f5fb13` |
-| Contratos a esclarecer | Endereços, paginação e filtros definidos pela documentação indicada pelo usuário. Ainda confirmar fuso, mensagens não especificadas e suporte a idempotência; backend será ajustado ao contrato |
-| Verificação atual | 124 testes de serviços, TypeScript e lint dos arquivos alterados aprovados; export web com 22 rotas aprovado; quatro testes de navegador aprovados no Edge headless com API simulada. Lint global mantém 1 erro e 15 avisos preexistentes; configuração nativa do ImagePicker conferida na entrega 3 |
-| Homologação funcional | Interface web com respostas simuladas. Backend ainda receberá endereços/pedidos e favoritos/foto; recuperação depende também do e-mail. API real e dispositivos Android/iOS não homologados. Sem operações na API do professor |
+| Contratos a esclarecer | Contratos da documentação do professor aplicados. Mensagens adicionais/normalização de CEP/status do backend registradas como provisórias pelo usuário; ainda confirmar fuso e idempotência |
+| Verificação atual | 139 testes de serviços, TypeScript e lint dos arquivos alterados aprovados; export web com 22 rotas aprovado; cinco testes de navegador aprovados no Edge headless com API simulada. Lint global mantém 1 erro e 15 avisos preexistentes; configuração nativa do ImagePicker conferida na entrega 3 |
+| Homologação funcional | App validado com respostas simuladas. Usuário relatou backend local aprovado para endereços/pedidos/favoritos/foto, sem commit/publicação. Integração publicada, e-mail e dispositivos Android/iOS pendentes. Sem operações na API do professor |
 
 **Histórico de trabalho**
 
@@ -43,6 +43,7 @@ Dependências adicionais para uma conta nova comprar com entrega:
 | 09/11/2026 | 3 — Foto e favoritos | Upload multipart com validação e foto compartilhada; favoritos autenticados nas três telas, sincronizados por foco e resposta da API; bloqueios e erros com nova tentativa; permissões nativas configuradas | 84 testes, TypeScript, lint dos arquivos alterados, export web, introspecção da configuração e os dois testes de navegador aprovados | Entrega 4; homologar API real, câmera, permissões e formatos nos dispositivos |
 | 09/11/2026 | 4 — Sacola | Persistência local por cliente, fila de alterações e proteção contra troca de sessão; detalhe adiciona e soma produtos; sacola dinâmica com limites, remoção, subtotal em centavos e recuperação de erros | 101 testes de serviços, TypeScript, lint dos arquivos alterados, export web e os três testes de navegador aprovados | Entrega 5; validar persistência nativa/API real; pagamento ainda é o protótipo a integrar na entrega 7 |
 | 09/11/2026 | 5 — Endereços e histórico | Contratos definidos pela documentação indicada pelo usuário; CRUD/principal/seleção de endereços; histórico paginado com filtro no servidor e navegação com ID; remoção dos exemplos de pedido no detalhe | 124 testes de serviços, TypeScript, lint dos arquivos alterados, export web e quatro testes de navegador aprovados | Entrega 6; backend ainda será implementado e homologado; detalhe tem mensagem provisória e pagamento permanece na entrega 7 |
+| 09/11/2026 | 6 — Detalhes/status/cancelamento | Pedido por ID, itens/totais/endereço/pagamento/observação reais; acompanhamento por modalidade, status leve e cancelamento com confirmação; registro do backend local relatado pelo usuário | 139 testes de serviços, TypeScript, lint dos arquivos alterados, export web e cinco testes de navegador aprovados com API simulada | Entrega 7; publicar/homologar backend e dispositivos. Este agente não executou os testes locais do backend nem publicou migrations |
 
 **Detalhes da fundação**
 
@@ -197,5 +198,33 @@ npm run test:web:dependencias
 ```
 
 O pacote do backend definido durante esta entrega inclui endereços/pedidos e favoritos/foto; recuperação de senha fica para o próximo pacote com SMTP. Essa é uma dependência externa registrada, não código de backend implementado neste repositório. Ainda validar as rotas implantadas, autorização entre clientes, persistência após reinício, fuso/status e comportamento em Android/iOS. O erro global de lint anterior permanece em `use-color-scheme.web.ts:11`.
+
+**Detalhes do pedido, status e cancelamento**
+
+`services/pedidos.ts` passou a consultar GET `/pedidos/{id}` e `/pedidos/{id}/status`, validar o ID e os dados e cancelar com PUT `/pedidos/{id}/cancelar` sem corpo. Totais/subtotal/desconto são os retornados pelo servidor; apenas os valores de cada linha usam preço unitário histórico e quantidade em centavos. Produto/endereço/cupom/datas/observação nulos são tratados, e campos adicionais de endereço são aceitos. Descrições de status da API são preservadas; os códigos determinam as ações.
+
+`hooks/use-pedido.ts` atualiza a consulta completa por foco e oferece atualização manual de status. Quando o código muda, atualiza os dados completos; quando permanece igual, usa a resposta leve. Não há polling em segundo plano. Troca de conta limpa o pedido/modal e descarta respostas antigas. Revisões por pedido impedem GET antigo de sobrescrever cancelamento; bloqueio síncrono no serviço impede PUTs simultâneos do mesmo pedido.
+
+`detalhe-pedido.tsx` substitui a mensagem provisória da entrega 5 pelo pedido real, mantendo o layout comum e os cartões de resumo/pagamento/observação. O endereço aparece somente para entrega. O acompanhamento distingue preparo, pronto para envio/retirada, saída para entrega e conclusão; `PRONTO` não retorna à etapa de preparo. Em pendente não há etapas concluídas; cancelado e códigos desconhecidos não desenham uma trilha fictícia. Não há frete ou previsão fixa. O contato da loja foi preservado com o número já existente no app; a abertura externa não foi exercitada pelos testes.
+
+O cancelamento só é oferecido para `PENDENTE` e exige um modal de confirmação. O servidor ainda decide se é permitido no instante do PUT. Uma confirmação resumida com o ID correto e `CANCELADO` atualiza a tela e os itens, sem depender de outro GET para confirmar a ação. 422, erro de rede ou resposta sem confirmação bloqueiam novo cancelamento até atualizar o pedido. Falha posterior na leitura não provoca novo PUT. IDs ausentes/inválidos, 404, erros de resposta e nova tentativa têm estados próprios. Recompra automática continua fora do escopo dos PDFs.
+
+Os **15 novos testes de serviços** cobrem contratos, totais independentes dos itens, nulos, IDs inválidos/divergentes, resposta parcial de cancelamento, 422/401/404/500, concorrência, GET antigo, troca de conta e estados do acompanhamento. O teste web confirmou esses fluxos na interface, incluindo abertura direta/recarga sem erro de hidratação, retirada em `PRONTO`, conclusão, status desconhecido, imagem indisponível, cancelamento recusado/sucesso/clique duplo, GET posterior com falha sem novo PUT, status leve sem nova consulta completa quando não muda e isolamento entre contas. O teste da entrega 5 agora verifica o detalhe real. Os três testes web restantes também passaram.
+
+```powershell
+npm test
+npx tsc --noEmit
+npx eslint src/services/pedidos.ts src/hooks/use-pedido.ts src/app/detalhe-pedido.tsx src/styles/detalhePedidoStyle.ts tests/detalhe-pedido.test.cjs tests/detalhe-pedido-web-smoke.cjs tests/dependencias-web-smoke.cjs
+npx expo export --platform web --output-dir .expo/export-verificacao
+npm run test:web:auth
+npm run test:web:perfil
+npm run test:web:sacola
+npm run test:web:dependencias
+npm run test:web:pedido
+```
+
+Capturas em `.expo/detalhe-pedido-web.png` e `.expo/pedido-retirada-web.png`. Não foram criados/cancelados pedidos reais nem abertas mensagens no WhatsApp. O lint global mantém o erro anterior em `use-color-scheme.web.ts:11` e 15 avisos nos arquivos restantes. Nenhuma dependência do app foi adicionada.
+
+O relato de backend local aprovado foi registrado separadamente em [publicacao-backend.md](publicacao-backend.md), com as alterações de estrutura, testes informados, mensagens provisórias e cuidados de implantação. Isso não confirma publicação nem testes de integração feitos por este agente. Ainda faltam checkout, implantação do backend, recuperação por e-mail e homologação em dispositivos.
 
 Ao encerrar uma sessão, acrescente uma linha ao histórico, atualize a tabela de retomada e registre resultados concretos dos testes. Diferencie código implementado de comportamento efetivamente homologado.

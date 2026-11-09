@@ -42,6 +42,7 @@
     "test:web:perfil": "node tests/perfil-favoritos-web-smoke.cjs",
     "test:web:sacola": "node tests/sacola-web-smoke.cjs",
     "test:web:dependencias": "node tests/dependencias-web-smoke.cjs",
+    "test:web:pedido": "node tests/detalhe-pedido-web-smoke.cjs",
     "start": "expo start",
     "start:clear": "expo start -c",
     "reset-project": "node ./scripts/reset-project.js",

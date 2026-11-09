@@ -76,6 +76,11 @@ async function executar() {
           enderecos.set(token, lista.filter((e) => e.id_endereco !== id));
           if (item.principal_endereco === "SIM" && enderecos.get(token).length) enderecos.get(token).at(-1).principal_endereco = "SIM";
         } else { status = 500; message = "Método não previsto."; }
+      } else if (/^\/pedidos\/\d+$/.test(rota) && req.method() === "GET") {
+        const item = token === "sessao-b" ? null : pedidos.find((p) => p.id_venda === Number(rota.split("/")[2]));
+        if (!item) { status = 404; message = "Recurso não encontrado."; }
+        else data = { ...item, subtotal_venda: item.valor_venda, valor_desconto_venda: 0, forma_pagamento_venda: "PIX", observacao_venda: null, endereco: null, cupom: null,
+          itens: item.itens.map((i) => ({ ...i, valor_unit_item: item.valor_venda / i.qtde_item, status_item: "ATIVO" })) };
       } else if (rota === "/pedidos" && req.method() === "GET") {
         const numero = Number(url.searchParams.get("page")); const filtro = url.searchParams.get("status");
         if (filtro === "PENDENTE") await new Promise((resolve) => setTimeout(resolve, 180));
@@ -178,7 +183,7 @@ async function executar() {
     await pagina.screenshot({ path: path.resolve(__dirname, "../.expo/historico-web.png"), fullPage: true });
     await botao("Ver detalhes do pedido 19").click(); await pagina.waitForURL(`${base}/detalhe-pedido?id=19`);
     await pagina.reload();
-    await texto("Pedido #19").waitFor(); await texto("Os detalhes deste pedido estão indisponíveis no momento.").waitFor();
+    await texto("Pedido #19").waitFor(); await texto("Resumo do pedido").waitFor();
     await botao("Voltar aos pedidos").click(); await texto("Pedido #20").waitFor();
     metaInvalida = true; await botao("Atualizar pedidos").click(); await alerta("histórico inválido");
     metaInvalida = false; await botao("Tentar novamente").click(); await texto("Pedido #20").waitFor();

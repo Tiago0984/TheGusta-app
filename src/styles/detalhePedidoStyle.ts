@@ -3,6 +3,15 @@ import { StyleSheet } from "react-native";
 import { cores, fontes } from "./variaveis";
 
 const detalhePedidoStyle = StyleSheet.create({
+  mensagem: { marginVertical: 12, fontSize: 14, fontFamily: fontes.comum, color: cores.cinza },
+  botao: { marginVertical: 8, paddingVertical: 10, paddingHorizontal: 12, borderWidth: 1, borderColor: cores.laranja, borderRadius: 10, backgroundColor: cores.branco, alignItems: "center" },
+  txtBotao: { fontSize: 14, fontFamily: fontes.negrito, color: cores.preto },
+  desabilitado: { opacity: 0.5 },
+  nomeItem: { flex: 1 },
+  linhaAcompanhamento: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 8 },
+  marcadorEtapa: { width: 32, height: 32, borderWidth: 2, borderColor: cores.cinza, borderRadius: 16, alignItems: "center", justifyContent: "center" },
+  fundoModal: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 24 },
+  cardModal: { width: "100%", maxWidth: 400, backgroundColor: cores.branco, padding: 24, borderRadius: 15 },
   conteudo: {
     marginTop: 30,
     marginBottom: 30,
@@ -88,8 +97,7 @@ const detalhePedidoStyle = StyleSheet.create({
   },
 
   statusPedido: {
-    width: 120,
-    height: 25,
+    maxWidth: "100%",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
@@ -249,12 +257,14 @@ const detalhePedidoStyle = StyleSheet.create({
 
   itemResumo: {
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "space-between",
     alignItems: "center",
     marginVertical: 3,
   },
 
   itemResumoEsquerdo: {
+    flex: 1,
+    marginRight: 8,
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
