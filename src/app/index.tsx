@@ -1,6 +1,5 @@
 import { router } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import {
   Image,
@@ -15,7 +14,7 @@ import {
 import LoginStyle from "@/styles/loginStyle";
 import globalStyle from "@/styles/globalStyle";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { API } from "@/config/api";
+import { entrar } from "@/services/auth";
 
 export default function LoginScreen() {
   const [verSenha, setVerSenha] = useState(false);
@@ -24,61 +23,25 @@ export default function LoginScreen() {
   const [senha, setSenha] = useState("");
   const [mensagem, setMensagem] = useState("");
   const [carregando, setCarregando] = useState(false);
-
-  async function mostrarMensagem(texto: string) {
-    setMensagem(texto);
-
-    setTimeout(() => {
-      setMensagem("");
-    }, 5000);
-  }
-
-  async function nomeDoDispositivo() {
-    let id = await AsyncStorage.getItem("device_id");
-    if (!id) {
-      id = `app-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      await AsyncStorage.setItem("device_id", id);
-    }
-    return id;
-  }
+  const enviando = useRef(false);
 
   async function fazerLogin() {
+    if (enviando.current) return;
     if (!email.trim() || !senha) {
-      mostrarMensagem("Informe e-mail e senha.");
+      setMensagem("Informe e-mail e senha.");
       return;
     }
-
+    enviando.current = true;
     setCarregando(true);
+    setMensagem("");
 
     try {
-      const resposta = await fetch(`${API}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          email: email.trim(),
-          senha: senha,
-          device_name: await nomeDoDispositivo(),
-        }),
-      });
-
-      const json = await resposta.json();
-
-      // 401 senha errada | 403 inativo | 422 campos | 429 tentativas
-      if (!resposta.ok || !json.success) {
-        mostrarMensagem(json.message);
-        return;
-      }
-
-      await AsyncStorage.setItem("token", json.data.token);
-
+      await entrar(email, senha);
       router.replace("/home");
     } catch (erro) {
-      console.log("Erro ao realizar login:", erro);
-      mostrarMensagem("Não foi possível conectar ao servidor.");
+      setMensagem(erro instanceof Error ? erro.message : "Não foi possível entrar. Tente novamente.");
     } finally {
+      enviando.current = false;
       setCarregando(false);
     }
   }
@@ -159,6 +122,10 @@ export default function LoginScreen() {
                   </Text>
                 </Pressable>
 
+                {mensagem ? (
+                  <Text style={LoginStyle.erroLogin} accessibilityRole="alert">{mensagem}</Text>
+                ) : null}
+
                 <Pressable
                   style={({ pressed }) => [
                     LoginStyle.btnEntrar,
@@ -167,7 +134,7 @@ export default function LoginScreen() {
                   onPress={fazerLogin}
                   disabled={carregando}
                 >
-                  <Text style={LoginStyle.txtEntrar}>Entrar</Text>
+                  <Text style={LoginStyle.txtEntrar}>{carregando ? "Entrando..." : "Entrar"}</Text>
                 </Pressable>
 
                 <View style={LoginStyle.Separador}>

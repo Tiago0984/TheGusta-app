@@ -1,9 +1,13 @@
-import { StyleSheet, TextInput } from "react-native";
+import { StyleSheet } from "react-native";
 
 import { cores } from "./variaveis";
-import { fontes } from "./variaveis";
 
 const LoginStyle = StyleSheet.create({
+  erroLogin: {
+    color: "#B42318",
+    textAlign: "center",
+    marginTop: 12,
+  },
   conteudo: {
     flex: 1,
     alignItems: "center",

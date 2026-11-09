@@ -1,4 +1,6 @@
-import { API } from "@/config/api";
+import { apiRequest } from "@/services/http";
+
+export { ApiError } from "@/services/http";
 
 export interface Categoria {
   id_categoria: number;
@@ -44,43 +46,9 @@ export interface CategoriaComProdutos {
   produtos: Produto[];
 }
 
-export class ApiError extends Error {
-  status?: number;
-
-  constructor(message: string, status?: number) {
-    super(message);
-    this.name = "ApiError";
-    this.status = status;
-  }
-}
-
 async function apiFetch<T>(caminho: string): Promise<T> {
-  let resposta: Response;
-
-  try {
-    resposta = await fetch(`${API}${caminho}`, {
-      headers: { Accept: "application/json" },
-    });
-  } catch {
-    throw new ApiError(
-      "Não foi possível conectar ao servidor. Verifique sua internet.",
-    );
-  }
-
-  if (!resposta.ok) {
-    throw new ApiError(
-      `Não foi possível carregar os dados (erro ${resposta.status}).`,
-      resposta.status,
-    );
-  }
-
-  const json = await resposta.json();
-
-  if (!json.success) {
-    throw new ApiError("A API retornou uma resposta inesperada.");
-  }
-
-  return json.data as T;
+  const { data } = await apiRequest<T>(caminho);
+  return data;
 }
 
 export function getProdutos() {
@@ -88,7 +56,7 @@ export function getProdutos() {
 }
 
 export function getProduto(slug: string) {
-  return apiFetch<Produto>(`/produtos/${slug}`);
+  return apiFetch<Produto>(`/produtos/${encodeURIComponent(slug)}`);
 }
 
 export function getCategorias() {

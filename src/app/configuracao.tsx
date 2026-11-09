@@ -18,8 +18,8 @@ import { useCliente } from "@/hooks/use-cliente";
 
 export default function ConfiguracaoScreen() {
   const [notificacoesAtivas, setNotificacoesAtivas] = useState(true);
-  const cliente = useCliente();
-  const [fotoClienteErro, setFotoClienteErro] = useState(false);
+  const { cliente, erro: erroCliente, atualizarCliente } = useCliente();
+  const [fotoClienteErro, setFotoClienteErro] = useState<string | null>(null);
 
   return (
     <View style={globalStyle.container}>
@@ -45,6 +45,11 @@ export default function ConfiguracaoScreen() {
             />
           </Pressable>
           <ScrollView style={globalStyle.scrollConteudo}>
+            {erroCliente ? (
+              <Pressable onPress={atualizarCliente} accessibilityRole="button" accessibilityLabel="Tentar carregar perfil novamente">
+                <Text style={{ color: "#B42318", textAlign: "center" }}>{erroCliente} Toque para tentar novamente.</Text>
+              </Pressable>
+            ) : null}
             <View style={configuracaoStyle.conteudo}>
               <View style={configuracaoStyle.header}>
                 <View style={configuracaoStyle.ladoEsquerdo}>
@@ -65,11 +70,11 @@ export default function ConfiguracaoScreen() {
                     <Image
                       style={configuracaoStyle.imgPerfil}
                       source={
-                        cliente?.foto_cliente && !fotoClienteErro
+                        cliente?.foto_cliente && fotoClienteErro !== cliente.foto_cliente
                           ? { uri: `${IMAGEM}/${cliente.foto_cliente}` }
                           : require("@/assets/images/img/user.png")
                       }
-                      onError={() => setFotoClienteErro(true)}
+                      onError={() => setFotoClienteErro(cliente?.foto_cliente ?? null)}
                     />
                   </View>
                   <View style={configuracaoStyle.textoSaudacao}>

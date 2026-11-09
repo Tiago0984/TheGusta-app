@@ -1,5 +1,5 @@
-import { useCallback, useState, useEffect } from "react";
-import { router } from "expo-router";
+import { useCallback, useRef, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   ActivityIndicator,
@@ -26,20 +26,13 @@ import {
 } from "@/services/api";
 
 export default function HomeScreen() {
-  const cliente = useCliente();
-  const [fotoClienteErro, setFotoClienteErro] = useState(false);
-  const [favoritos, setFavoritos] = useState([false, false, false]);
+  const { cliente, erro: erroCliente, atualizarCliente } = useCliente();
+  const [fotoClienteErro, setFotoClienteErro] = useState<string | null>(null);
   const [produtos, setProdutos] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
   const [bannerSemImagem, setBannerSemImagem] = useState<number[]>([]);
   const [larguraBanner, setLarguraBanner] = useState(0);
-
-  function alternarFavorito(indice: number) {
-    setFavoritos((atual) =>
-      atual.map((valor, i) => (i === indice ? !valor : valor)),
-    );
-  }
 
   const [produtosEmDestaque, setProdutosEmDestaque] = useState<any[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -47,14 +40,12 @@ export default function HomeScreen() {
 
   const carregarDados = useCallback(async () => {
     try {
-      setCarregando(true);
-      setErro("");
-
       const [produtosData, categoriasData, bannersData] = await Promise.all([
         getProdutos(),
         getCategorias(),
         getBanners(),
       ]);
+      setErro("");
 
       const produtosAtivos = produtosData
         .filter((produto) => produto.status_produto === "ATIVO")
@@ -98,9 +89,18 @@ export default function HomeScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    carregarDados();
-  }, [carregarDados]);
+  const catalogoSolicitado = useRef(false);
+  useFocusEffect(useCallback(() => {
+    if (catalogoSolicitado.current) return;
+    catalogoSolicitado.current = true;
+    void carregarDados();
+  }, [carregarDados]));
+
+  function tentarCarregarDados() {
+    setCarregando(true);
+    setErro("");
+    void carregarDados();
+  }
 
   const [textoBusca, setTextoBusca] = useState("");
 
@@ -185,6 +185,11 @@ export default function HomeScreen() {
       >
         <SafeAreaView style={globalStyle.areaConteudo}>
           <ScrollView style={globalStyle.scrollConteudo}>
+            {erroCliente ? (
+              <Pressable onPress={atualizarCliente} accessibilityRole="button" accessibilityLabel="Tentar carregar perfil novamente">
+                <Text style={{ color: "#B42318", textAlign: "center" }}>{erroCliente} Toque para tentar novamente.</Text>
+              </Pressable>
+            ) : null}
             <View style={homeStyle.header}>
               <View style={homeStyle.conteudo}>
                 <Text style={homeStyle.titulo}>
@@ -194,11 +199,11 @@ export default function HomeScreen() {
                   <Image
                     style={homeStyle.perfil}
                     source={
-                      cliente?.foto_cliente && !fotoClienteErro
+                      cliente?.foto_cliente && fotoClienteErro !== cliente.foto_cliente
                         ? { uri: `${IMAGEM}/${cliente.foto_cliente}` }
                         : require("@/assets/images/img/user.png")
                     }
-                    onError={() => setFotoClienteErro(true)}
+                    onError={() => setFotoClienteErro(cliente?.foto_cliente ?? null)}
                   />
                 </View>
               </View>
@@ -233,7 +238,7 @@ export default function HomeScreen() {
                   <Text style={homeStyle.txtSemDestaque}>{erro}</Text>
                   <Pressable
                     style={homeStyle.btnTentarNovo}
-                    onPress={carregarDados}
+                    onPress={tentarCarregarDados}
                   >
                     <Text style={homeStyle.txtTentarNovo}>Tentar de novo</Text>
                   </Pressable>

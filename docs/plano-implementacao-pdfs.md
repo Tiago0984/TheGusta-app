@@ -4,6 +4,8 @@ Data: 06/11/2026. Escopo: comparar os oito PDFs fornecidos com o código deste r
 
 Para continuar em outro computador, leia [CONTINUAR-AQUI.md](../CONTINUAR-AQUI.md) e atualize o [checklist de progresso](progresso-implementacao.md). As cópias dos oito PDFs estão em [referencias/](referencias/README.md).
 
+Este diagnóstico registra a situação em 06/11/2026. A implementação foi retomada em 09/11/2026; para entregas concluídas e resultados atuais, consulte o checklist. As comparações por etapa abaixo permanecem como referência histórica.
+
 Os comandos e trechos dos PDFs foram tratados como requisitos de referência. Esta entrega é uma auditoria e um plano; o código funcional do app não foi alterado.
 
 **Resultado geral**

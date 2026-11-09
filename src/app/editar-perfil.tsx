@@ -1,10 +1,9 @@
 import FooterScreen from "@/app/footer";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import globalStyle from "@/styles/globalStyle";
 import editarPerfilStyle from "@/styles/editarPerfilStyle";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import {
   Alert,
   Image,
@@ -20,11 +19,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { cores } from "@/styles/variaveis";
 
-import { API, IMAGEM } from "@/config/api";
+import { IMAGEM } from "@/config/api";
 import { useCliente } from "@/hooks/use-cliente";
+import { salvarDadosPerfil } from "@/services/cliente";
+import type { Cliente } from "@/types/cliente";
 
 // Converte a data do banco (aaaa-mm-dd) para dd/mm/aaaa
-function formatarData(data?: string) {
+function formatarData(data?: string | null) {
   if (!data) {
     return "";
   }
@@ -76,6 +77,48 @@ function mascaraTelefone(texto: string) {
 }
 
 export default function EditarPerfilScreen() {
+  const { cliente, carregando, erro, atualizarCliente } = useCliente();
+
+  if (!cliente) {
+    return (
+      <View style={globalStyle.container}>
+        <ImageBackground source={require("@/assets/images/img/00_fundo.png")} style={globalStyle.background} resizeMode="cover">
+          <SafeAreaView style={globalStyle.areaConteudo}>
+            <Pressable style={globalStyle.btnVoltar} onPress={() => router.canGoBack() ? router.back() : router.replace("/configuracao")}>
+              <Image style={globalStyle.imgVoltar} source={require("@/assets/images/img/voltar.png")} />
+            </Pressable>
+            <ScrollView style={globalStyle.scrollConteudo}>
+              <Text style={editarPerfilStyle.titulo}>Editar perfil</Text>
+              <Text style={editarPerfilStyle.txtMensagemErro}>{carregando ? "Carregando perfil..." : erro}</Text>
+              {!carregando ? (
+                <Pressable onPress={atualizarCliente} style={editarPerfilStyle.btnSalvar}>
+                  <Text style={editarPerfilStyle.txtSalvar}>Tentar novamente</Text>
+                </Pressable>
+              ) : null}
+            </ScrollView>
+            <FooterScreen />
+          </SafeAreaView>
+        </ImageBackground>
+      </View>
+    );
+  }
+
+  return (
+    <EditarPerfilFormulario
+      key={cliente.id_cliente}
+      cliente={cliente}
+      erroCarregamento={erro}
+      tentarNovamente={atualizarCliente}
+    />
+  );
+}
+
+// O formulário inicia uma vez por cliente; atualizações de foto/foco não apagam a edição.
+function EditarPerfilFormulario({ cliente, erroCarregamento, tentarNovamente }: {
+  cliente: Cliente;
+  erroCarregamento: string;
+  tentarNovamente: () => Promise<void>;
+}) {
   const [notificacoesAtivas, setNotificacoesAtivas] = useState(true);
 
   const [modalFoto, setModalFoto] = useState(false);
@@ -131,13 +174,12 @@ export default function EditarPerfilScreen() {
   };
 
   // Dados do cliente carregados da API (Editar perfil)
-  const cliente = useCliente();
-  const [fotoClienteErro, setFotoClienteErro] = useState(false);
-  const [nome, setNome] = useState("");
-  const [email, setEmail] = useState("");
-  const [telefone, setTelefone] = useState("");
-  const [documento, setDocumento] = useState("");
-  const [dataNascimento, setDataNascimento] = useState("");
+  const [fotoClienteErro, setFotoClienteErro] = useState<string | null>(null);
+  const [nome, setNome] = useState(cliente.nome_cliente ?? "");
+  const [email, setEmail] = useState(cliente.email_cliente ?? "");
+  const [telefone, setTelefone] = useState(mascaraTelefone(cliente.telefone_cliente ?? ""));
+  const [documento, setDocumento] = useState(mascaraCpfCnpj(cliente.cpf_cnpj_cliente ?? ""));
+  const [dataNascimento, setDataNascimento] = useState(formatarData(cliente.data_nasc_cliente));
 
   const [erro, setErro] = useState("");
 
@@ -145,6 +187,7 @@ export default function EditarPerfilScreen() {
   const [mensagem, setMensagem] = useState("");
   const [sucesso, setSucesso] = useState(false);
   const [salvando, setSalvando] = useState(false);
+  const envioPendente = useRef(false);
 
   // Formatar data padrão Brasil (dd/mm/aaaa) e validar se é uma data válida
   function mascaraData(texto: string) {
@@ -203,17 +246,6 @@ export default function EditarPerfilScreen() {
   }
 
 
-  useEffect(() => {
-    if (!cliente) {
-      return;
-    }
-    setNome(cliente.nome_cliente ?? "");
-    setEmail(cliente.email_cliente ?? "");
-    setTelefone(mascaraTelefone(cliente.telefone_cliente ?? ""));
-    setDocumento(mascaraCpfCnpj(cliente.cpf_cnpj_cliente ?? ""));
-    setDataNascimento(formatarData(cliente.data_nasc_cliente));
-  }, [cliente]);
-
   // CNPJ tem 14 digitos, CPF tem 11
   const ehCnpj = documento.replace(/\D/g, "").length > 11;
 
@@ -224,6 +256,7 @@ export default function EditarPerfilScreen() {
 
   // Envia o cadastro completo para a API (PUT /cliente exige os 6 campos)
   async function salvarPerfil() {
+    if (envioPendente.current) return;
     const digitosTelefone = telefone.replace(/\D/g, "");
     const digitosDocumento = documento.replace(/\D/g, "");
 
@@ -251,48 +284,24 @@ export default function EditarPerfilScreen() {
     // dd/mm/aaaa -> aaaa-mm-dd
     const [dia, mes, ano] = dataNascimento.split("/");
 
+    envioPendente.current = true;
     setSalvando(true);
     mostrarMensagem("");
 
     try {
-      const token = await AsyncStorage.getItem("token");
-      const resposta = await fetch(`${API}/cliente`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          nome_cliente: nome.trim(),
-          tipo_cliente: digitosDocumento.length === 14 ? "PJ" : "PF",
-          cpf_cnpj_cliente: documento,
-          data_nasc_cliente: `${ano}-${mes}-${dia}`,
-          email_cliente: email.trim(),
-          telefone_cliente: telefone,
-        }),
+      const mensagemSucesso = await salvarDadosPerfil({
+        nome_cliente: nome.trim(),
+        tipo_cliente: digitosDocumento.length === 14 ? "PJ" : "PF",
+        cpf_cnpj_cliente: documento,
+        data_nasc_cliente: `${ano}-${mes}-${dia}`,
+        email_cliente: email.trim(),
+        telefone_cliente: telefone,
       });
-
-      const json = await resposta.json();
-
-      // 401: "Sessão expirada. Faça login novamente."
-      if (resposta.status === 401) {
-        await AsyncStorage.removeItem("token");
-        router.replace("/");
-        return;
-      }
-
-      // 422: e-mail ou CPF já usados, campo inválido...
-      if (!resposta.ok || !json.success) {
-        mostrarMensagem(json.message);
-        return;
-      }
-
-      mostrarMensagem(json.message, true); // "Dados atualizados com sucesso."
+      mostrarMensagem(mensagemSucesso, true);
     } catch (error) {
-      console.log("Erro ao salvar perfil:", error);
-      mostrarMensagem("Não foi possível conectar ao servidor.");
+      mostrarMensagem(error instanceof Error ? error.message : "Não foi possível salvar o perfil.");
     } finally {
+      envioPendente.current = false;
       setSalvando(false);
     }
   }
@@ -336,6 +345,13 @@ export default function EditarPerfilScreen() {
               </View>
 
               <View style={editarPerfilStyle.main}>
+                {erroCarregamento ? (
+                  <Pressable onPress={tentarNovamente} accessibilityRole="button">
+                    <Text style={editarPerfilStyle.txtMensagemErro}>
+                      {erroCarregamento} Toque para tentar novamente.
+                    </Text>
+                  </Pressable>
+                ) : null}
                 <View style={editarPerfilStyle.cardFoto}>
                   <View style={editarPerfilStyle.fotoEsquerdo}>
                     <View style={editarPerfilStyle.bordaPerfil}>
@@ -344,11 +360,11 @@ export default function EditarPerfilScreen() {
                         source={
                           imagem
                             ? { uri: imagem }
-                            : cliente?.foto_cliente && !fotoClienteErro
+                            : cliente?.foto_cliente && fotoClienteErro !== cliente.foto_cliente
                               ? { uri: `${IMAGEM}/${cliente.foto_cliente}` }
                               : require("@/assets/images/img/user.png")
                         }
-                        onError={() => setFotoClienteErro(true)}
+                        onError={() => setFotoClienteErro(cliente.foto_cliente)}
                       />
                     </View>
                     <View style={editarPerfilStyle.textoFoto}>

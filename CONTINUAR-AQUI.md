@@ -43,7 +43,7 @@ Auditoria realizada em **06/11/2026**, sobre o código do commit `cc4b1d6bd88186
 
 Nenhum dos oito guias estava completo. Login, catálogo, consulta do cliente e atualização dos dados pessoais já tinham integrações para reaproveitar. Cadastro, recuperação, favoritos persistentes, upload da foto, sacola dinâmica e pedidos reais ainda precisam das mudanças descritas no plano.
 
-Próxima ação: iniciar a **entrega 1 — Fundação**, verificar a situação atual do código e confirmar os contratos disponíveis. Depois seguir a ordem do plano e atualizar o progresso ao concluir cada entrega. Não repetir a auditoria inteira sem necessidade; o diagnóstico é a referência inicial e pode ficar desatualizado conforme o código evoluir.
+Retomada em **09/11/2026**, no computador original: a **entrega 1 — Fundação técnica** foi implementada e validada localmente. A próxima ação é a **entrega 2 — Cadastro e recuperação**. Consulte o checklist para o estado mais recente; contratos complementares e homologação com a API real continuam pendentes. Não repetir a auditoria inteira sem necessidade; o diagnóstico é a referência inicial e pode ficar desatualizado conforme o código evoluir.
 
 **API e validação**
 
@@ -56,9 +56,10 @@ Para obter a situação inicial após instalar as dependências:
 ```powershell
 npx tsc --noEmit
 npx eslint src
+npm test
 ```
 
-Na auditoria anterior, o TypeScript passou. O ESLint apontou **7 erros e 38 avisos preexistentes**. Os detalhes estão no plano; não atribua esses problemas à transferência. Não houve homologação em dispositivo nem execução de operações reais na API. Câmera, permissões e abertura do WhatsApp precisam de validação no dispositivo/navegador apropriado.
+Na auditoria inicial, o TypeScript passou e o ESLint apontou **7 erros e 38 avisos preexistentes**. Após a entrega 1, os 18 testes de serviços, TypeScript, lint dos arquivos alterados e export web passaram; no lint global ainda restam **5 erros e 31 avisos**. Resultados e pendências estão no checklist. Não houve homologação em dispositivo nem execução de operações reais na API. Câmera, permissões e abertura do WhatsApp precisam de validação no dispositivo/navegador apropriado.
 
 **Mensagem pronta para o Codex do outro PC**
 
