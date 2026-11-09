@@ -3,6 +3,9 @@ import { StyleSheet } from "react-native";
 import { cores, fontes } from "./variaveis";
 
 const sacolaStyle = StyleSheet.create({
+  mensagem: { paddingVertical: 20, gap: 10 },
+  txtMensagem: { color: cores.preto, fontFamily: fontes.comum, textAlign: "center", fontSize: 16 },
+  desabilitado: { opacity: 0.5 },
   conteudo: {
     marginTop: 30,
     marginBottom: 30,
@@ -69,7 +72,9 @@ const sacolaStyle = StyleSheet.create({
   },
 
   centroItem: {
-    width: "45%",
+    flex: 1,
+    minWidth: 0,
+    marginHorizontal: 8,
   },
 
   tituloItem: {
@@ -86,9 +91,9 @@ const sacolaStyle = StyleSheet.create({
   },
 
   valoresItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "baseline",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: 3,
   },
 
   valorUnitItem: {
@@ -106,12 +111,14 @@ const sacolaStyle = StyleSheet.create({
   direitaItem: {
     alignItems: "flex-end",
     justifyContent: "space-between",
-    width: "25%",
+    width: 76,
   },
 
   btnExcluir: {
-    width: 20,
-    height: 20,
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   imgExcluir: {
@@ -121,8 +128,8 @@ const sacolaStyle = StyleSheet.create({
 
   caixaQtde: {
     flexDirection: "row",
-    width: 50,
-    height: 20,
+    width: 76,
+    height: 32,
     borderRadius: 5,
     borderWidth: 1,
     borderColor: cores.laranja,
@@ -132,7 +139,7 @@ const sacolaStyle = StyleSheet.create({
     backgroundColor: cores.branco,
   },
 
-  btnQtde: {},
+  btnQtde: { width: 24, height: 28, alignItems: "center", justifyContent: "center" },
 
   imgQtde: {
     width: 8,

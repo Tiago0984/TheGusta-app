@@ -1,6 +1,6 @@
 # Progresso da implementação
 
-Última atualização: **09/11/2026**. Fundação, cadastro/recuperação, foto de perfil e favoritos foram implementados e validados localmente. A próxima entrega é a sacola dinâmica por cliente.
+Última atualização: **09/11/2026**. Fundação, cadastro/recuperação, foto de perfil, favoritos e sacola por cliente foram implementados e validados localmente. A próxima entrega é a integração de endereços e histórico, dependências do checkout.
 
 Plano de referência: [plano-implementacao-pdfs.md](plano-implementacao-pdfs.md). Instalação e contexto: [CONTINUAR-AQUI.md](../CONTINUAR-AQUI.md). Materiais: [referencias/README.md](referencias/README.md).
 
@@ -9,7 +9,7 @@ Marque uma entrega somente após implementar e validar seus critérios de aceite
 - [x] **1 — Fundação técnica:** contratos atuais de login/cliente conferidos no código existente; serviços autenticados, tipos/erros, tratamento de 401, atualização compartilhada do cliente e consultas públicas preservadas. Validada com testes isolados e build web; homologação com a API real ainda pendente.
 - [x] **2 — Cadastro e recuperação:** formulário validado, cadastro/sessão, solicitação do código, quatro dígitos e redefinição; nascimento nulo no perfil. Testes de serviços e navegador com API simulada aprovados; recebimento de e-mail e API real ainda não homologados.
 - [x] **3 — Foto e favoritos:** upload validado e sincronização do cliente; consulta/adição/remoção de favoritos em Home, Cardápio e Detalhe com erros e bloqueios. Serviços e navegador com API simulada aprovados; API real e câmera/permissões em dispositivo ainda pendentes.
-- [ ] **4 — Sacola:** armazenamento por cliente, adição/união/quantidade/remoção, limite 1–99, estados de carregamento/erro/vazio e subtotal real.
+- [x] **4 — Sacola:** armazenamento por cliente, adição/união/quantidade/remoção, limite 1–99, estados de carregamento/erro/vazio e subtotal real. Serviços e navegador com API simulada aprovados; persistência no dispositivo e API real ainda precisam de homologação. Integração do pagamento permanece na entrega 7.
 - [ ] **5 — Dependências do checkout:** endereços reais e seleção; histórico com contrato confirmado e navegação com ID para detalhe.
 - [ ] **6 — Detalhes reais:** consulta por ID, dados/totais/status/modalidade reais, nulos, cancelamento e erros.
 - [ ] **7 — Checkout:** agendamento, payload real, POST do pedido, total confirmado, limpeza da sacola e WhatsApp posterior ao registro sem duplicidade.
@@ -24,12 +24,12 @@ Dependências adicionais para uma conta nova comprar com entrega:
 
 | Campo | Situação atual |
 | --- | --- |
-| Última entrega concluída | 3 — Foto e favoritos, validada localmente em 09/11/2026 |
+| Última entrega concluída | 4 — Sacola, validada localmente em 09/11/2026 |
 | Entrega em andamento | Nenhuma |
-| Próxima ação | Entrega 4: sacola persistente por cliente; confirmar contratos complementares de histórico/endereços antes da entrega 5 |
+| Próxima ação | Entrega 5: confirmar contratos complementares e integrar cadastro/seleção de endereços e histórico com navegação por ID |
 | Base do código auditado | `cc4b1d6bd88186c8c2c5d24e955f336ae9f5fb13` |
 | Contratos a esclarecer | Histórico/paginação/filtros; criação/edição de endereços; semântica de status e fuso; idempotência, se suportada |
-| Verificação atual | 84 testes de serviços, TypeScript e lint dos arquivos alterados aprovados; export web com 22 rotas aprovado; testes de autenticação e perfil/favoritos aprovados no Edge headless com API simulada; configuração nativa do ImagePicker conferida por introspecção. Lint global ainda tem 1 erro e 17 avisos preexistentes nos arquivos restantes |
+| Verificação atual | 101 testes de serviços, TypeScript e lint dos arquivos alterados aprovados; export web com 22 rotas aprovado; testes de autenticação, perfil/favoritos e sacola aprovados no Edge headless com API simulada. Lint global ainda tem 1 erro e 15 avisos preexistentes nos arquivos restantes; configuração nativa do ImagePicker conferida na entrega 3 |
 | Homologação funcional | Interface web exercitada com respostas simuladas. API real, recebimento de e-mail, câmera/permissões e dispositivos Android/iOS ainda não homologados |
 
 **Histórico de trabalho**
@@ -40,6 +40,7 @@ Dependências adicionais para uma conta nova comprar com entrega:
 | 09/11/2026 | 1 — Fundação técnica | HTTP/sessão centralizados; login com erros visíveis; cliente compartilhado e atualizado por foco; salvamento do perfil atualiza Home/Configuração sem sobrescrever formulário em edição | 18 testes isolados, TypeScript, lint dos arquivos alterados e export web aprovados | Entrega 2; homologar API/dispositivos e confirmar contratos faltantes |
 | 09/11/2026 | 2 — Cadastro e recuperação | Cadastro com validação, aceite e sessão; solicitação de código; quatro dígitos com foco/Backspace/colagem; validação e redefinição antes de voltar ao login; mensagens e bloqueios de envio | 53 testes de serviços, TypeScript, lint dos arquivos alterados, export web e teste de interface no Edge com API simulada aprovados | Entrega 3; homologar API real/e-mail e Android/iOS |
 | 09/11/2026 | 3 — Foto e favoritos | Upload multipart com validação e foto compartilhada; favoritos autenticados nas três telas, sincronizados por foco e resposta da API; bloqueios e erros com nova tentativa; permissões nativas configuradas | 84 testes, TypeScript, lint dos arquivos alterados, export web, introspecção da configuração e os dois testes de navegador aprovados | Entrega 4; homologar API real, câmera, permissões e formatos nos dispositivos |
+| 09/11/2026 | 4 — Sacola | Persistência local por cliente, fila de alterações e proteção contra troca de sessão; detalhe adiciona e soma produtos; sacola dinâmica com limites, remoção, subtotal em centavos e recuperação de erros | 101 testes de serviços, TypeScript, lint dos arquivos alterados, export web e os três testes de navegador aprovados | Entrega 5; validar persistência nativa/API real; pagamento ainda é o protótipo a integrar na entrega 7 |
 
 **Detalhes da fundação**
 
@@ -137,5 +138,33 @@ npm run test:web:perfil
 As capturas desta entrega ficam em `.expo/favoritos-web.png` e `.expo/foto-perfil-web.png`. `npx expo config --type introspect --json` foi usado para conferir os textos de permissão gerados, sem criar projetos nativos. Alterações do config plugin exigem um novo build nativo para aparecer no aplicativo instalado, conforme a [documentação do ImagePicker no SDK 57](https://docs.expo.dev/versions/v57.0.0/sdk/imagepicker/).
 
 Antes da homologação final, validar a API real, persistência entre dispositivos, câmera permitida/negada, cancelamento no seletor nativo, recorte/qualidade e formatos/tamanho em Android/iOS. Nenhuma foto real foi enviada ao servidor nesta implementação.
+
+**Detalhes da sacola**
+
+`src/config/sacola.ts` implementa os cinco métodos do guia: carregar, adicionar, alterar quantidade, remover e limpar. Cada operação identifica o cliente pelo GET `/cliente` autenticado e captura uma única chave `sacola_cliente_<id_cliente>`; não confia no antigo cache local de cliente. A fila serializa leituras e alterações para preservar unidades em chamadas simultâneas. Mudanças de sessão invalidam operações antigas, inclusive as que estavam na fila. Uma gravação que já começou pode terminar somente na chave capturada da conta anterior; seu resultado é recusado após uma troca de sessão.
+
+IDs, preços, quantidades, estrutura do JSON e duplicatas são validados. O limite de 1–99 vale também ao somar unidades de um produto existente. Ao adicionar novamente, nome, descrição, foto e preço são atualizados com o produto consultado. Produtos inativos não podem ser adicionados. Os subtotais são calculados em centavos; não representam o total final confirmado pelo servidor.
+
+O detalhe bloqueia toques repetidos e navega somente após salvar. A sacola atualiza ao receber foco, mostra itens/fotos com fallback, permite alterar e remover, distingue carregamento/erro/vazio e bloqueia pagamento quando vazia, ocupada ou com erro. Trocar a conta limpa imediatamente os dados exibidos. Falhas ao salvar preservam a lista anterior e exigem nova leitura antes de continuar. JSON inválido nunca é apagado automaticamente: há nova tentativa e a ação explícita “Esvaziar sacola” para recomeçar.
+
+Foram retirados endereço, frete e descontos fictícios da sacola. O cupom permanece visível e desabilitado, com indicação de indisponibilidade, pois o guia não define aplicação de desconto. O botão continua navegando para `/pagamento` quando há itens, conforme o guia; **a tela de pagamento ainda contém dados de demonstração e será integrada na entrega 7**. Nenhum pedido foi confirmado nem WhatsApp aberto nos testes.
+
+Os 17 novos testes de serviços cobrem união e metadados, operações simultâneas, subtotal, limites, validação de produtos/identidade/dados locais, sessão ausente/expirada, troca de conta durante consulta/leitura/gravação, falhas de armazenamento e recuperação da fila. O teste de navegador cobre adição e união, quantidades 1 e 99 no detalhe e na sacola, cliques repetidos, remoção, subtotal, recarga, contas A/B e retorno a A, favoritos preservados, erros de API/leitura/gravação, recuperação de JSON inválido e bloqueio do pagamento vazio. Os testes anteriores de autenticação e perfil/favoritos também passaram.
+
+Para repetir, com o Playwright opcional descrito acima:
+
+```powershell
+npm test
+npx tsc --noEmit
+npx eslint src/config/sacola.ts src/app/sacola.tsx src/app/detalhe-produto.tsx src/styles/sacolaStyle.ts src/styles/detalheProdutoStyle.ts tests/services.test.cjs tests/sacola-web-smoke.cjs
+npx expo export --platform web --output-dir .expo/export-verificacao
+npm run test:web:auth
+npm run test:web:perfil
+npm run test:web:sacola
+```
+
+As capturas ficam em `.expo/sacola-web-itens.png` e `.expo/sacola-web-aprovada.png`, fora do Git. O lint global mantém o erro anterior em `use-color-scheme.web.ts:11` e 15 avisos em outros arquivos. Não houve alteração de dependências do app.
+
+A sacola é local ao navegador/aparelho e não sincroniza entre dispositivos; logout mantém os itens para o próximo login do mesmo cliente. A identificação exige acesso à API mesmo para ler a sacola. Ainda é necessário homologar GET `/cliente` e a persistência após reinício no Android/iOS, além de concluir as entregas 5–8 antes do fluxo completo de compra.
 
 Ao encerrar uma sessão, acrescente uma linha ao histórico, atualize a tabela de retomada e registre resultados concretos dos testes. Diferencie código implementado de comportamento efetivamente homologado.

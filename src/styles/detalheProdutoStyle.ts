@@ -1,9 +1,10 @@
 import { StyleSheet } from "react-native";
 
-import { cores } from "./variaveis";
-import { fontes } from "./variaveis";
+import { cores, fontes } from "./variaveis";
 
 const detalheProdutoStyle = StyleSheet.create({
+  erroSacola: { marginTop: 12, color: cores.preto, textAlign: "center", fontFamily: fontes.comum },
+  desabilitado: { opacity: 0.5 },
   mensagem: {
     width: "100%",
     paddingVertical: 60,

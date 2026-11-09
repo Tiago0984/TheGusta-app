@@ -3,7 +3,7 @@ import detalheProdutoStyle from "@/styles/detalheProdutoStyle";
 import globalStyle from "@/styles/globalStyle";
 import { cores } from "@/styles/variaveis";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { IMAGEM } from "@/config/api";
+import { adicionarNaSacola } from "@/config/sacola";
 import { ApiError, getCategorias, getProduto, type Produto } from "@/services/api";
 import { useFavoritos } from "@/hooks/use-favoritos";
 import { BotaoFavorito, MensagemFavoritos } from "@/components/favoritos";
@@ -43,6 +44,10 @@ function DetalheProdutoConteudo({ slug }: { slug: string }) {
   const [erro, setErro] = useState("");
   const [semImagem, setSemImagem] = useState(false);
   const [quantidade, setQuantidade] = useState(1);
+  const [adicionando, setAdicionando] = useState(false);
+  const [erroSacola, setErroSacola] = useState("");
+  const envioSacola = useRef(false);
+  const focada = useRef(false);
 
   const carregarProduto = useCallback(async () => {
     if (!slug) {
@@ -79,19 +84,34 @@ function DetalheProdutoConteudo({ slug }: { slug: string }) {
   }, [slug]);
 
   useFocusEffect(useCallback(() => {
+    focada.current = true;
     void carregarProduto();
+    return () => { focada.current = false; };
   }, [carregarProduto]));
 
   function aumentarQuantidade() {
-    setQuantidade(quantidade + 1);
+    setQuantidade((atual) => Math.min(99, atual + 1));
   }
 
   function diminuirQuantidade() {
-    if (quantidade > 1) {
-      setQuantidade(quantidade - 1);
+    setQuantidade((atual) => Math.max(1, atual - 1));
+  }
+
+  async function adicionar() {
+    if (!produto || envioSacola.current) return;
+    envioSacola.current = true;
+    setAdicionando(true);
+    setErroSacola("");
+    try {
+      await adicionarNaSacola(produto, quantidade);
+      if (focada.current) router.push("/sacola");
+    } catch (error) {
+      if (focada.current) setErroSacola(error instanceof Error ? error.message : "Não foi possível adicionar o produto à sacola.");
+    } finally {
+      envioSacola.current = false;
+      setAdicionando(false);
     }
   }
-  
 
   return (
     <View style={globalStyle.container}>
@@ -186,6 +206,9 @@ function DetalheProdutoConteudo({ slug }: { slug: string }) {
                         <Pressable
                           style={detalheProdutoStyle.btnQtde}
                           onPress={diminuirQuantidade}
+                          accessibilityRole="button"
+                          accessibilityLabel="Diminuir quantidade"
+                          disabled={adicionando || quantidade <= 1}
                         >
                           <Image
                             style={detalheProdutoStyle.imgQtde}
@@ -198,6 +221,9 @@ function DetalheProdutoConteudo({ slug }: { slug: string }) {
                         <Pressable
                           style={detalheProdutoStyle.btnQtde}
                           onPress={aumentarQuantidade}
+                          accessibilityRole="button"
+                          accessibilityLabel="Aumentar quantidade"
+                          disabled={adicionando || quantidade >= 99}
                         >
                           <Image
                             style={detalheProdutoStyle.imgQtde}
@@ -215,9 +241,13 @@ function DetalheProdutoConteudo({ slug }: { slug: string }) {
                       </View>
                     </View>
 
-                    <Pressable style={detalheProdutoStyle.btnSubtotal}>
+                    {erroSacola ? <Text accessibilityRole="alert" style={detalheProdutoStyle.erroSacola}>{erroSacola}</Text> : null}
+                    {produto.status_produto !== "ATIVO" ? <Text style={detalheProdutoStyle.erroSacola}>Produto indisponível para compra.</Text> : null}
+                    <Pressable accessibilityRole="button" onPress={() => void adicionar()}
+                      disabled={adicionando || produto.status_produto !== "ATIVO"}
+                      style={[detalheProdutoStyle.btnSubtotal, (adicionando || produto.status_produto !== "ATIVO") && detalheProdutoStyle.desabilitado]}>
                       <Text style={detalheProdutoStyle.txtSacola}>
-                        Adicionar à Sacola
+                        {adicionando ? "Adicionando..." : "Adicionar à Sacola"}
                       </Text>
                     </Pressable>
                   </View>

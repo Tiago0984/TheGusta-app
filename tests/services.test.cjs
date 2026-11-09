@@ -46,7 +46,7 @@ function ambiente(responder, dados = {}, opcoesAmbiente = {}) {
       .runInContext(contexto)(importar, modulo, modulo.exports);
     return modulo.exports;
   }
-  return { carregar, armazenamento, chamadas, navegacoes };
+  return { carregar, armazenamento, chamadas, navegacoes, storage };
 }
 
 const resposta = (data, status = 200, message) => Response.json({ success: status < 400, data, message }, { status });
@@ -57,6 +57,229 @@ function adiada() {
   const promessa = new Promise((resolve) => { resolver = resolve; });
   return { promessa, resolver };
 }
+
+const produtoSacola = { id_produto: 7, nome_produto: "Bolo", descricao_produto: "Bolo de teste", foto_produto: null, valor_produto: 75.9, status_produto: "ATIVO" };
+const itemSacola = { id_produto: 7, nome_produto: "Bolo", descricao_produto: "Bolo de teste", foto_produto: null, valor_produto: 75.9, quantidade: 2 };
+const listaSalva = (app, id = 1) => JSON.parse(app.armazenamento.get(`sacola_cliente_${id}`));
+
+test("sacola identifica cliente pela API, ignora cache antigo e soma o mesmo produto", async () => {
+  const app = ambiente(() => resposta({ ...cliente, id_cliente: "1" }), { token: "a", cliente: JSON.stringify({ id_cliente: 999 }) });
+  const sacola = app.carregar("config/sacola");
+  assert.equal((await sacola.carregarSacola()).length, 0);
+  await sacola.adicionarNaSacola({ ...produtoSacola, id_produto: "7", valor_produto: "75.90" }, 2);
+  await sacola.adicionarNaSacola({ ...produtoSacola, nome_produto: "Nome novo", valor_produto: 80 }, 3);
+  const itens = await sacola.carregarSacola();
+  assert.equal(itens.length, 1);
+  assert.equal(itens[0].quantidade, 5);
+  assert.equal(itens[0].nome_produto, "Nome novo");
+  assert.equal(sacola.subtotalSacola(itens), 400);
+  assert.equal(app.chamadas.length, 4);
+  assert.ok(app.chamadas.every((c) => c.url.endsWith("/cliente") && c.headers.get("Authorization") === "Bearer a"));
+  assert.equal(app.armazenamento.has("sacola_cliente_999"), false);
+});
+
+test("sacola altera, remove e limpa apenas a conta autenticada", async () => {
+  const app = ambiente((_url, op) => resposta({ ...cliente, id_cliente: op.headers.get("Authorization") === "Bearer b" ? 2 : 1 }), { token: "a" });
+  const sacola = app.carregar("config/sacola");
+  const sessao = app.carregar("services/sessao");
+  await sacola.adicionarNaSacola(produtoSacola, 2);
+  await sessao.salvarToken("b");
+  assert.equal((await sacola.carregarSacola()).length, 0);
+  await sacola.adicionarNaSacola({ ...produtoSacola, id_produto: 8 }, 1);
+  await sessao.salvarToken("a");
+  assert.equal((await sacola.carregarSacola())[0].quantidade, 2);
+  await sacola.alterarQuantidadeSacola(7, 99);
+  assert.equal(listaSalva(app)[0].quantidade, 99);
+  await sacola.alterarQuantidadeSacola(7, 1);
+  await sacola.adicionarNaSacola({ ...produtoSacola, id_produto: 9 }, 1);
+  await sacola.removerDaSacola(7);
+  assert.equal(listaSalva(app)[0].id_produto, 9);
+  await sacola.limparSacola();
+  assert.deepEqual(listaSalva(app), []);
+  assert.equal(listaSalva(app, 2)[0].id_produto, 8);
+});
+
+test("sacola serializa adições concorrentes sem perder unidades", async () => {
+  const app = ambiente(() => resposta(cliente), { token: "a" });
+  const sacola = app.carregar("config/sacola");
+  await Promise.all(Array.from({ length: 8 }, () => sacola.adicionarNaSacola(produtoSacola, 1)));
+  assert.equal(listaSalva(app)[0].quantidade, 8);
+});
+
+test("sacola soma em centavos e não acumula erro de ponto flutuante", () => {
+  const sacola = ambiente(() => resposta(cliente)).carregar("config/sacola");
+  assert.equal(sacola.subtotalSacola([{ ...itemSacola, valor_produto: 0.1, quantidade: 1 }, { ...itemSacola, valor_produto: 0.2, quantidade: 1 }]), 0.3);
+});
+
+test("sacola recusa quantidade inválida e soma acima de 99 sem alterar o salvo", async () => {
+  const app = ambiente(() => resposta(cliente), { token: "a" });
+  const sacola = app.carregar("config/sacola");
+  for (const quantidade of [0, -1, 100, 1.2, NaN, "2"]) {
+    await assert.rejects(sacola.adicionarNaSacola(produtoSacola, quantidade), /entre 1 e 99/);
+    await assert.rejects(sacola.alterarQuantidadeSacola(7, quantidade), /entre 1 e 99/);
+  }
+  assert.equal(app.chamadas.length, 0);
+  await sacola.adicionarNaSacola(produtoSacola, 99);
+  await assert.rejects(sacola.adicionarNaSacola(produtoSacola, 1), /entre 1 e 99/);
+  assert.equal(listaSalva(app)[0].quantidade, 99);
+});
+
+test("sacola recusa produto inativo, preço e ID inválidos antes da API", async () => {
+  const app = ambiente(() => resposta(cliente), { token: "a" });
+  const sacola = app.carregar("config/sacola");
+  for (const campos of [{ id_produto: 0 }, { id_produto: 1.5 }, { id_produto: null }, { valor_produto: null }, { valor_produto: -1 }, { valor_produto: Infinity }, { valor_produto: "" }, { valor_produto: true }, { nome_produto: "" }, { status_produto: "INATIVO" }]) {
+    await assert.rejects(sacola.adicionarNaSacola({ ...produtoSacola, ...campos }, 1));
+  }
+  assert.equal(app.chamadas.length, 0);
+  assert.equal(app.armazenamento.has("sacola_cliente_1"), false);
+});
+
+test("sacola exige ID válido retornado pela consulta autenticada", async () => {
+  for (const id_cliente of [undefined, null, 0, -1, 1.5, true, "abc"]) {
+    const app = ambiente(() => resposta({ id_cliente }), { token: "a" });
+    await assert.rejects(app.carregar("config/sacola").adicionarNaSacola(produtoSacola, 1), /identificar o cliente/);
+    assert.equal(app.armazenamento.size, 1);
+  }
+});
+
+test("sacola ausente ou expirada usa o tratamento central da sessão", async () => {
+  for (const token of [undefined, "expirado"]) {
+    const dados = { sacola_cliente_1: JSON.stringify([itemSacola]), ...(token ? { token } : {}) };
+    const app = ambiente(() => resposta(null, 401), dados);
+    await assert.rejects(app.carregar("config/sacola").carregarSacola(), { status: 401 });
+    assert.equal(app.armazenamento.has("token"), false);
+    assert.equal(listaSalva(app)[0].quantidade, 2);
+    assert.deepEqual(app.navegacoes, ["/"]);
+  }
+});
+
+test("sacola preserva JSON inválido até limpeza explícita, sem bloquear a fila", async () => {
+  const app = ambiente(() => resposta(cliente), { token: "a", sacola_cliente_1: "JSON quebrado" });
+  const sacola = app.carregar("config/sacola");
+  await assert.rejects(sacola.carregarSacola(), { name: "ErroSacolaInvalida" });
+  await assert.rejects(sacola.adicionarNaSacola(produtoSacola, 1), { name: "ErroSacolaInvalida" });
+  assert.equal(app.armazenamento.get("sacola_cliente_1"), "JSON quebrado");
+  await sacola.limparSacola();
+  await sacola.adicionarNaSacola(produtoSacola, 1);
+  assert.equal(listaSalva(app)[0].quantidade, 1);
+});
+
+test("sacola valida estrutura, duplicatas e limites dos itens recuperados", async () => {
+  const dadosInvalidos = [null, {}, [null], [{}], [itemSacola, itemSacola], ...[
+    { id_produto: "7" }, { id_produto: 0 }, { quantidade: 0 }, { quantidade: 100 }, { quantidade: "2" },
+    { valor_produto: "10" }, { valor_produto: null }, { valor_produto: -1 }, { nome_produto: null }, { descricao_produto: null }, { foto_produto: {} },
+  ].map((campos) => [{ ...itemSacola, ...campos }])];
+  for (const dados of dadosInvalidos) {
+    const salvo = JSON.stringify(dados);
+    const app = ambiente(() => resposta(cliente), { token: "a", sacola_cliente_1: salvo });
+    await assert.rejects(app.carregar("config/sacola").carregarSacola(), { name: "ErroSacolaInvalida" });
+    assert.equal(app.armazenamento.get("sacola_cliente_1"), salvo);
+  }
+});
+
+test("sacola informa falha de leitura e permite tentar novamente", async () => {
+  const app = ambiente(() => resposta(cliente), { token: "a", sacola_cliente_1: JSON.stringify([itemSacola]) });
+  const original = app.storage.getItem;
+  app.storage.getItem = async (chave) => { if (chave.startsWith("sacola_")) throw new Error("Disco"); return original(chave); };
+  const sacola = app.carregar("config/sacola");
+  await assert.rejects(sacola.carregarSacola(), /Não foi possível ler/);
+  app.storage.getItem = original;
+  assert.equal((await sacola.carregarSacola())[0].quantidade, 2);
+});
+
+test("sacola informa falha de escrita, preserva itens e libera a fila", async () => {
+  const app = ambiente(() => resposta(cliente), { token: "a", sacola_cliente_1: JSON.stringify([itemSacola]) });
+  const original = app.storage.setItem;
+  app.storage.setItem = async () => { throw new Error("Sem espaço"); };
+  const sacola = app.carregar("config/sacola");
+  await assert.rejects(sacola.alterarQuantidadeSacola(7, 3), /Não foi possível salvar/);
+  assert.equal(listaSalva(app)[0].quantidade, 2);
+  app.storage.setItem = original;
+  await sacola.alterarQuantidadeSacola(7, 4);
+  assert.equal(listaSalva(app)[0].quantidade, 4);
+});
+
+test("sacola não grava após troca de sessão durante a leitura", async () => {
+  const app = ambiente(() => resposta(cliente), { token: "a", sacola_cliente_1: JSON.stringify([itemSacola]) });
+  const inicio = adiada();
+  const liberar = adiada();
+  const original = app.storage.getItem;
+  app.storage.getItem = async (chave) => {
+    if (chave === "sacola_cliente_1") { inicio.resolver(); await liberar.promessa; }
+    return original(chave);
+  };
+  const operacao = app.carregar("config/sacola").adicionarNaSacola(produtoSacola, 1);
+  const rejeicao = assert.rejects(operacao, { status: 409 });
+  await inicio.promessa;
+  await app.carregar("services/sessao").salvarToken("b");
+  liberar.resolver();
+  await rejeicao;
+  assert.equal(listaSalva(app)[0].quantidade, 2);
+  assert.equal(app.armazenamento.has("sacola_cliente_2"), false);
+});
+
+test("sacola descarta operações enfileiradas da sessão anterior", async () => {
+  const inicio = adiada();
+  const liberar = adiada();
+  const app = ambiente(async () => { inicio.resolver(); await liberar.promessa; return resposta(cliente); }, { token: "a" });
+  const sacola = app.carregar("config/sacola");
+  const a = assert.rejects(sacola.adicionarNaSacola(produtoSacola, 1), { status: 409 });
+  const b = assert.rejects(sacola.limparSacola(), { status: 409 });
+  await inicio.promessa;
+  await app.carregar("services/sessao").salvarToken("b");
+  liberar.resolver();
+  await Promise.all([a, b]);
+  assert.equal(app.chamadas.length, 1);
+  assert.equal(app.armazenamento.size, 1);
+});
+
+test("escrita já iniciada termina apenas na chave capturada e rejeita resultado após troca", async () => {
+  const app = ambiente((_url, op) => resposta({ ...cliente, id_cliente: op.headers.get("Authorization") === "Bearer b" ? 2 : 1 }), { token: "a" });
+  const inicio = adiada();
+  const liberar = adiada();
+  const original = app.storage.setItem;
+  app.storage.setItem = async (chave, valor) => {
+    if (chave === "sacola_cliente_1") { inicio.resolver(); await liberar.promessa; }
+    return original(chave, valor);
+  };
+  const sacola = app.carregar("config/sacola");
+  const rejeicao = assert.rejects(sacola.adicionarNaSacola(produtoSacola, 2), { status: 409 });
+  await inicio.promessa;
+  await app.carregar("services/sessao").salvarToken("b");
+  const novaOperacao = sacola.adicionarNaSacola({ ...produtoSacola, id_produto: 8 }, 1);
+  liberar.resolver();
+  await rejeicao;
+  await novaOperacao;
+  assert.equal(listaSalva(app)[0].id_produto, 7);
+  assert.equal(listaSalva(app, 2)[0].id_produto, 8);
+});
+
+test("sacola detecta troca de conta e retorno ao mesmo token durante consulta", async () => {
+  const inicio = adiada();
+  const liberar = adiada();
+  const app = ambiente(async () => { inicio.resolver(); await liberar.promessa; return resposta(cliente); }, { token: "a" });
+  const rejeicao = assert.rejects(app.carregar("config/sacola").adicionarNaSacola(produtoSacola, 1), { status: 409 });
+  await inicio.promessa;
+  const sessao = app.carregar("services/sessao");
+  await sessao.salvarToken("b");
+  await sessao.salvarToken("a");
+  liberar.resolver();
+  await rejeicao;
+  assert.equal(app.armazenamento.size, 1);
+});
+
+test("sacola falha na identificação sem escrever e sem contaminar próxima operação", async () => {
+  let falhar = true;
+  const app = ambiente(() => falhar ? resposta(null, 500, "Cliente indisponível.") : resposta(cliente), { token: "a" });
+  const sacola = app.carregar("config/sacola");
+  await assert.rejects(sacola.adicionarNaSacola(produtoSacola, 1), /Cliente indisponível/);
+  assert.equal(app.armazenamento.size, 1);
+  falhar = false;
+  await sacola.adicionarNaSacola(produtoSacola, 1);
+  assert.equal(listaSalva(app)[0].quantidade, 1);
+  await assert.rejects(sacola.alterarQuantidadeSacola(999, 2), /não está mais/);
+  assert.equal(listaSalva(app)[0].id_produto, 7);
+});
 
 test("catálogo preserva GET público sem enviar a sessão armazenada", async () => {
   const app = ambiente(() => resposta([{ id_produto: 7 }]), { token: "sessao-local" });

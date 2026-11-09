@@ -43,13 +43,13 @@ Auditoria realizada em **06/11/2026**, sobre o código do commit `cc4b1d6bd88186
 
 Nenhum dos oito guias estava completo. Login, catálogo, consulta do cliente e atualização dos dados pessoais já tinham integrações para reaproveitar. Cadastro, recuperação, favoritos persistentes, upload da foto, sacola dinâmica e pedidos reais ainda precisam das mudanças descritas no plano.
 
-Retomada em **09/11/2026**, no computador original: as **entregas 1 — Fundação técnica, 2 — Cadastro e recuperação e 3 — Foto e favoritos** foram implementadas e validadas localmente. A próxima ação é a **entrega 4 — Sacola**. Consulte o checklist para o estado mais recente; contratos complementares e homologação com a API real continuam pendentes. Não repetir a auditoria inteira sem necessidade; o diagnóstico é a referência inicial e pode ficar desatualizado conforme o código evoluir.
+Retomada em **09/11/2026**, no computador original: as **entregas 1 — Fundação técnica, 2 — Cadastro e recuperação, 3 — Foto e favoritos e 4 — Sacola** foram implementadas e validadas localmente. A próxima ação é a **entrega 5 — Dependências do checkout: endereços e histórico**. Consulte o checklist para o estado mais recente; contratos complementares e homologação com a API real continuam pendentes. Não repetir a auditoria inteira sem necessidade; o diagnóstico é a referência inicial e pode ficar desatualizado conforme o código evoluir.
 
 **API e validação**
 
 A configuração atual está em [src/config/api.ts](src/config/api.ts). O app aponta para uma API remota; este repositório não inclui o backend nem exige XAMPP para servir o frontend. Confirme com o responsável se esse endereço deve ser usado nos testes. As rotas nos PDFs são contratos de referência, não endpoints homologados nesta auditoria.
 
-Credenciais e dados de sessão não estão neste material de continuidade. Faça login no novo dispositivo com uma conta de teste. O armazenamento local, incluindo a futura sacola, pertence ao navegador/dispositivo e não é transferido por um clone do Git.
+Credenciais e dados de sessão não estão neste material de continuidade. Faça login no novo dispositivo com uma conta de teste. A sacola usa armazenamento local por cliente: pertence ao navegador/dispositivo e não é transferida por um clone do Git. O pagamento ainda usa o protótipo anterior; sua integração com os itens reais está prevista na entrega 7.
 
 Para obter a situação inicial após instalar as dependências:
 
@@ -59,7 +59,7 @@ npx eslint src
 npm test
 ```
 
-Na auditoria inicial, o TypeScript passou e o ESLint apontou **7 erros e 38 avisos preexistentes**. Após a entrega 3, os 84 testes de serviços, TypeScript, lint dos arquivos alterados e export web passaram; autenticação, foto e favoritos também passaram no navegador com API simulada. No lint global ainda restam **1 erro e 17 avisos**. Resultados, comandos dos testes web e pendências estão no checklist. Não houve homologação em dispositivo nem execução de operações reais na API. Recebimento de e-mail, câmera, permissões e abertura do WhatsApp precisam de validação nos ambientes apropriados.
+Na auditoria inicial, o TypeScript passou e o ESLint apontou **7 erros e 38 avisos preexistentes**. Após a entrega 4, os **101 testes de serviços**, TypeScript, lint dos arquivos alterados e export web passaram; autenticação, foto/favoritos e sacola também passaram no navegador com API simulada. No lint global ainda restam **1 erro e 15 avisos**. Resultados, comandos dos testes web e pendências estão no checklist. Não houve homologação em dispositivo nem execução de operações reais na API. Recebimento de e-mail, câmera, permissões e abertura do WhatsApp precisam de validação nos ambientes apropriados.
 
 **Mensagem pronta para o Codex do outro PC**
 
