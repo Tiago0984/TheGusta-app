@@ -2,6 +2,8 @@
 
 Este repositório contém o app, os oito PDFs originais e o plano para concluir os fluxos. Você pode trabalhar em qualquer pasta; o projeto não depende de `C:\xampp\htdocs` nem do OneDrive do computador anterior.
 
+**Sessão encerrada em 09/11/2026, a pedido do usuário.** Entregas 1–6 salvas; última base funcional `66d4f62`, publicada na `main`. Retomar pela **entrega 7 — Checkout**, que ainda não foi iniciada. O [registro de encerramento](docs/encerramento-2026-11-09.md) reúne validações, decisões, estado do backend e sequência de retomada. Não iniciar outra entrega durante este encerramento.
+
 **Preparar o computador**
 
 Instale Git e Node.js com npm. O ambiente usado na auditoria tinha Node **24.11.1** e npm **11.6.2**; essas são as versões de referência para reproduzir a instalação. O mínimo documentado do SDK 57 é Node 22.13.x: [documentação versionada do Expo](https://docs.expo.dev/versions/v57.0.0/).
@@ -74,10 +76,10 @@ Leia AGENTS.md, CONTINUAR-AQUI.md, docs/plano-implementacao-pdfs.md e
 docs/progresso-implementacao.md. Os oito PDFs estão em docs/referencias/.
 Consulte a documentação exata do Expo SDK 57 antes de escrever código.
 
-Confira o progresso e o código atual; se o checklist ainda estiver vazio,
-comece pela entrega 1 (Fundação). Implemente as pendências dos oito guias
-na ordem de dependências do plano, preservando o layout e as integrações
-existentes. Adapte os exemplos aos arquivos e estilos reais do projeto.
+Leia também docs/encerramento-2026-11-09.md. As entregas 1–6 estão salvas;
+confira o código atual e retome pela entrega 7 (Checkout). Verifique se o
+backend foi comitado/publicado desde o último relato do usuário. Preserve
+as integrações existentes e adapte os exemplos aos arquivos/estilos reais.
 
 Não invente contratos de API: consulte a documentação ou o backend quando
 disponíveis e identifique qualquer informação que falte. Continue as partes

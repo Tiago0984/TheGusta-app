@@ -2,6 +2,8 @@
 
 Última atualização: **09/11/2026**. As entregas 1–6 do app foram implementadas e validadas com API simulada. O usuário relatou testes locais aprovados de endereços/pedidos e favoritos/foto no backend, ainda sem commit/publicação. A próxima entrega do app é o checkout; integração com o servidor publicado e dispositivos continua pendente.
 
+**Sessão encerrada a pedido do usuário em 09/11/2026.** Não há entrega parcial em andamento. Retomar pela entrega 7 conforme [encerramento-2026-11-09.md](encerramento-2026-11-09.md); base funcional publicada: `66d4f62`. Este encerramento modifica somente documentação e preserva os resultados de validação da entrega 6.
+
 Plano de referência: [plano-implementacao-pdfs.md](plano-implementacao-pdfs.md). Instalação e contexto: [CONTINUAR-AQUI.md](../CONTINUAR-AQUI.md). Materiais: [referencias/README.md](referencias/README.md).
 
 Marque uma entrega somente após implementar e validar seus critérios de aceite. Quando houver trabalho parcial, registre abaixo sem marcar como concluída.
@@ -25,6 +27,7 @@ Dependências adicionais para uma conta nova comprar com entrega:
 
 | Campo | Situação atual |
 | --- | --- |
+| Estado da sessão | Encerrada em 09/11/2026 a pedido do usuário; aguardando retomada |
 | Última entrega concluída | 6 — Detalhes/status/cancelamento do pedido, validada localmente em 09/11/2026 |
 | Entrega em andamento | Nenhuma |
 | Próxima ação | Entrega 7: checkout com sacola/endereço, modalidade, agendamento, POST, total confirmado e ações posteriores sem duplicidade |
@@ -44,6 +47,7 @@ Dependências adicionais para uma conta nova comprar com entrega:
 | 09/11/2026 | 4 — Sacola | Persistência local por cliente, fila de alterações e proteção contra troca de sessão; detalhe adiciona e soma produtos; sacola dinâmica com limites, remoção, subtotal em centavos e recuperação de erros | 101 testes de serviços, TypeScript, lint dos arquivos alterados, export web e os três testes de navegador aprovados | Entrega 5; validar persistência nativa/API real; pagamento ainda é o protótipo a integrar na entrega 7 |
 | 09/11/2026 | 5 — Endereços e histórico | Contratos definidos pela documentação indicada pelo usuário; CRUD/principal/seleção de endereços; histórico paginado com filtro no servidor e navegação com ID; remoção dos exemplos de pedido no detalhe | 124 testes de serviços, TypeScript, lint dos arquivos alterados, export web e quatro testes de navegador aprovados | Entrega 6; backend ainda será implementado e homologado; detalhe tem mensagem provisória e pagamento permanece na entrega 7 |
 | 09/11/2026 | 6 — Detalhes/status/cancelamento | Pedido por ID, itens/totais/endereço/pagamento/observação reais; acompanhamento por modalidade, status leve e cancelamento com confirmação; registro do backend local relatado pelo usuário | 139 testes de serviços, TypeScript, lint dos arquivos alterados, export web e cinco testes de navegador aprovados com API simulada | Entrega 7; publicar/homologar backend e dispositivos. Este agente não executou os testes locais do backend nem publicou migrations |
+| 09/11/2026 | Encerramento | Registro consolidado, mensagem de retomada e ponto de parada; nenhuma alteração funcional | Revisão dos registros e `git diff --check`; testes da entrega 6 preservados, sem nova execução por se tratar apenas de documentação | Aguardar o usuário; retomar pela entrega 7 e confirmar o estado do backend |
 
 **Detalhes da fundação**
 
