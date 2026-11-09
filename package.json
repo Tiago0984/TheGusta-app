@@ -37,10 +37,11 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
-    "test": "node --test tests/services.test.cjs",
+    "test": "node --test tests/*.test.cjs",
     "test:web:auth": "node tests/auth-web-smoke.cjs",
     "test:web:perfil": "node tests/perfil-favoritos-web-smoke.cjs",
     "test:web:sacola": "node tests/sacola-web-smoke.cjs",
+    "test:web:dependencias": "node tests/dependencias-web-smoke.cjs",
     "start": "expo start",
     "start:clear": "expo start -c",
     "reset-project": "node ./scripts/reset-project.js",

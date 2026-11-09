@@ -13,6 +13,7 @@ export class ApiError extends Error {
 export interface RespostaApi<T> {
   data: T;
   message?: string;
+  meta?: unknown;
 }
 
 type OpcoesApi = RequestInit & {
@@ -73,7 +74,7 @@ export async function apiRequest<T>(
     throw new ApiError("A API retornou uma resposta inesperada.", resposta.status);
   }
 
-  const resultado = conteudo as { success?: boolean; message?: unknown; data?: T };
+  const resultado = conteudo as { success?: boolean; message?: unknown; data?: T; meta?: unknown };
   const mensagem = typeof resultado.message === "string" ? resultado.message : undefined;
   if (!resposta.ok || resultado.success !== true) {
     throw new ApiError(
@@ -81,5 +82,5 @@ export async function apiRequest<T>(
       resposta.status,
     );
   }
-  return { data: resultado.data as T, message: mensagem };
+  return { data: resultado.data as T, message: mensagem, meta: resultado.meta };
 }

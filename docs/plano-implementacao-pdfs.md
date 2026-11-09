@@ -6,6 +6,8 @@ Para continuar em outro computador, leia [CONTINUAR-AQUI.md](../CONTINUAR-AQUI.m
 
 Este diagnóstico registra a situação em 06/11/2026. A implementação foi retomada em 09/11/2026; para entregas concluídas e resultados atuais, consulte o checklist. As comparações por etapa abaixo permanecem como referência histórica.
 
+Em 09/11/2026, o usuário definiu a documentação da API do professor como contrato das rotas novas; os contratos antes ausentes de endereços e histórico estão registrados em [contratos-enderecos-pedidos.md](contratos-enderecos-pedidos.md). O backend do projeto ainda será ajustado a eles.
+
 Os comandos e trechos dos PDFs foram tratados como requisitos de referência. Esta entrega é uma auditoria e um plano; o código funcional do app não foi alterado.
 
 **Resultado geral**

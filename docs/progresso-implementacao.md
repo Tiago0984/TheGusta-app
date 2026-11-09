@@ -1,6 +1,6 @@
 # Progresso da implementação
 
-Última atualização: **09/11/2026**. Fundação, cadastro/recuperação, foto de perfil, favoritos e sacola por cliente foram implementados e validados localmente. A próxima entrega é a integração de endereços e histórico, dependências do checkout.
+Última atualização: **09/11/2026**. As entregas 1–5 do app foram implementadas e validadas localmente. Endereços e histórico seguem a documentação do professor definida pelo usuário; as rotas ainda serão acrescentadas ao backend do projeto. A próxima entrega é a consulta real dos detalhes do pedido.
 
 Plano de referência: [plano-implementacao-pdfs.md](plano-implementacao-pdfs.md). Instalação e contexto: [CONTINUAR-AQUI.md](../CONTINUAR-AQUI.md). Materiais: [referencias/README.md](referencias/README.md).
 
@@ -10,27 +10,28 @@ Marque uma entrega somente após implementar e validar seus critérios de aceite
 - [x] **2 — Cadastro e recuperação:** formulário validado, cadastro/sessão, solicitação do código, quatro dígitos e redefinição; nascimento nulo no perfil. Testes de serviços e navegador com API simulada aprovados; recebimento de e-mail e API real ainda não homologados.
 - [x] **3 — Foto e favoritos:** upload validado e sincronização do cliente; consulta/adição/remoção de favoritos em Home, Cardápio e Detalhe com erros e bloqueios. Serviços e navegador com API simulada aprovados; API real e câmera/permissões em dispositivo ainda pendentes.
 - [x] **4 — Sacola:** armazenamento por cliente, adição/união/quantidade/remoção, limite 1–99, estados de carregamento/erro/vazio e subtotal real. Serviços e navegador com API simulada aprovados; persistência no dispositivo e API real ainda precisam de homologação. Integração do pagamento permanece na entrega 7.
-- [ ] **5 — Dependências do checkout:** endereços reais e seleção; histórico com contrato confirmado e navegação com ID para detalhe.
+- [x] **5 — Dependências do checkout:** consulta/cadastro/edição/principal/exclusão de endereços, seleção por sessão e histórico com filtros/paginação e ID para detalhe. Contratos da documentação do professor definidos pelo usuário; serviços e navegador com API simulada aprovados. Backend e dispositivos ainda pendentes de homologação.
 - [ ] **6 — Detalhes reais:** consulta por ID, dados/totais/status/modalidade reais, nulos, cancelamento e erros.
 - [ ] **7 — Checkout:** agendamento, payload real, POST do pedido, total confirmado, limpeza da sacola e WhatsApp posterior ao registro sem duplicidade.
 - [ ] **8 — Homologação:** critérios do plano exercitados, verificações de código e resultados registrados por plataforma.
 
 Dependências adicionais para uma conta nova comprar com entrega:
 
-- [ ] Confirmar contratos para criar/editar endereços.
-- [ ] Integrar `enderecos.tsx` e `editar-endereco.tsx` para permitir cadastro e seleção reais. O PDF de pagamento pressupõe endereço já existente; retirada deve funcionar sem endereço.
+- [x] Confirmar contratos para criar/editar endereços: documentação do professor indicada pelo usuário em 09/11/2026, registrada em [contratos-enderecos-pedidos.md](contratos-enderecos-pedidos.md).
+- [x] Integrar `enderecos.tsx` e `editar-endereco.tsx` para cadastro e seleção no app, validados com API simulada. A conexão com pagamento fica na entrega 7; retirada deve funcionar sem endereço.
+- [ ] Disponibilizar e homologar essas rotas no backend do projeto. O usuário informou que ainda serão implementadas.
 
 **Registro da retomada**
 
 | Campo | Situação atual |
 | --- | --- |
-| Última entrega concluída | 4 — Sacola, validada localmente em 09/11/2026 |
+| Última entrega concluída | 5 — Endereços e histórico, validada localmente em 09/11/2026 |
 | Entrega em andamento | Nenhuma |
-| Próxima ação | Entrega 5: confirmar contratos complementares e integrar cadastro/seleção de endereços e histórico com navegação por ID |
+| Próxima ação | Entrega 6: GET do pedido por ID, itens/totais/modalidade/status reais, nulos, cancelamento e erros, seguindo a documentação do professor |
 | Base do código auditado | `cc4b1d6bd88186c8c2c5d24e955f336ae9f5fb13` |
-| Contratos a esclarecer | Histórico/paginação/filtros; criação/edição de endereços; semântica de status e fuso; idempotência, se suportada |
-| Verificação atual | 101 testes de serviços, TypeScript e lint dos arquivos alterados aprovados; export web com 22 rotas aprovado; testes de autenticação, perfil/favoritos e sacola aprovados no Edge headless com API simulada. Lint global ainda tem 1 erro e 15 avisos preexistentes nos arquivos restantes; configuração nativa do ImagePicker conferida na entrega 3 |
-| Homologação funcional | Interface web exercitada com respostas simuladas. API real, recebimento de e-mail, câmera/permissões e dispositivos Android/iOS ainda não homologados |
+| Contratos a esclarecer | Endereços, paginação e filtros definidos pela documentação indicada pelo usuário. Ainda confirmar fuso, mensagens não especificadas e suporte a idempotência; backend será ajustado ao contrato |
+| Verificação atual | 124 testes de serviços, TypeScript e lint dos arquivos alterados aprovados; export web com 22 rotas aprovado; quatro testes de navegador aprovados no Edge headless com API simulada. Lint global mantém 1 erro e 15 avisos preexistentes; configuração nativa do ImagePicker conferida na entrega 3 |
+| Homologação funcional | Interface web com respostas simuladas. Backend ainda receberá endereços/pedidos e favoritos/foto; recuperação depende também do e-mail. API real e dispositivos Android/iOS não homologados. Sem operações na API do professor |
 
 **Histórico de trabalho**
 
@@ -41,6 +42,7 @@ Dependências adicionais para uma conta nova comprar com entrega:
 | 09/11/2026 | 2 — Cadastro e recuperação | Cadastro com validação, aceite e sessão; solicitação de código; quatro dígitos com foco/Backspace/colagem; validação e redefinição antes de voltar ao login; mensagens e bloqueios de envio | 53 testes de serviços, TypeScript, lint dos arquivos alterados, export web e teste de interface no Edge com API simulada aprovados | Entrega 3; homologar API real/e-mail e Android/iOS |
 | 09/11/2026 | 3 — Foto e favoritos | Upload multipart com validação e foto compartilhada; favoritos autenticados nas três telas, sincronizados por foco e resposta da API; bloqueios e erros com nova tentativa; permissões nativas configuradas | 84 testes, TypeScript, lint dos arquivos alterados, export web, introspecção da configuração e os dois testes de navegador aprovados | Entrega 4; homologar API real, câmera, permissões e formatos nos dispositivos |
 | 09/11/2026 | 4 — Sacola | Persistência local por cliente, fila de alterações e proteção contra troca de sessão; detalhe adiciona e soma produtos; sacola dinâmica com limites, remoção, subtotal em centavos e recuperação de erros | 101 testes de serviços, TypeScript, lint dos arquivos alterados, export web e os três testes de navegador aprovados | Entrega 5; validar persistência nativa/API real; pagamento ainda é o protótipo a integrar na entrega 7 |
+| 09/11/2026 | 5 — Endereços e histórico | Contratos definidos pela documentação indicada pelo usuário; CRUD/principal/seleção de endereços; histórico paginado com filtro no servidor e navegação com ID; remoção dos exemplos de pedido no detalhe | 124 testes de serviços, TypeScript, lint dos arquivos alterados, export web e quatro testes de navegador aprovados | Entrega 6; backend ainda será implementado e homologado; detalhe tem mensagem provisória e pagamento permanece na entrega 7 |
 
 **Detalhes da fundação**
 
@@ -166,5 +168,34 @@ npm run test:web:sacola
 As capturas ficam em `.expo/sacola-web-itens.png` e `.expo/sacola-web-aprovada.png`, fora do Git. O lint global mantém o erro anterior em `use-color-scheme.web.ts:11` e 15 avisos em outros arquivos. Não houve alteração de dependências do app.
 
 A sacola é local ao navegador/aparelho e não sincroniza entre dispositivos; logout mantém os itens para o próximo login do mesmo cliente. A identificação exige acesso à API mesmo para ler a sacola. Ainda é necessário homologar GET `/cliente` e a persistência após reinício no Android/iOS, além de concluir as entregas 5–8 antes do fluxo completo de compra.
+
+**Detalhes de endereços e histórico**
+
+Os contratos foram obtidos na [documentação do professor indicada pelo usuário](https://xyzcode.tipi5.smpsistema.com.br/davilla/api/documentacao) e resumidos em [contratos-enderecos-pedidos.md](contratos-enderecos-pedidos.md). A informação anterior de contrato ausente no diagnóstico histórico foi resolvida. A API configurada não mudou; o usuário informou que o backend será ajustado à documentação. Nenhuma conta foi criada na API do professor e nenhum dado foi escrito nela.
+
+`services/enderecos.ts` centraliza GET/POST/PATCH/DELETE e PUT de principal, valida campos/tamanhos/UF/CEP, usa Bearer, bloqueia alterações concorrentes e descarta respostas de sessões antigas. A lista/seleção são compartilhadas em memória e limpas ao trocar a conta. Somente endereços da lista autenticada atual podem ser selecionados. Principal salvo no servidor e destino selecionado para a compra são estados distintos. A lista é atualizada por foco e após alterações; uma leitura anterior não desfaz um salvamento confirmado. Se a alteração foi confirmada e somente a atualização da lista falhar, o formulário não tenta cadastrar novamente.
+
+`enderecos.tsx` substitui os três exemplos pela lista real, com carregamento/erro/vazio, escolha do destino, estrela de principal e confirmação de exclusão por modal compatível com web. `editar-endereco.tsx` atende criação e edição por ID, inclui número/complemento separados, valida antes de enviar, preserva campos em caso de erro e bloqueia reenvios. O serviço envia somente os campos documentados, incluindo CEP na edição. Respostas 404 e parâmetros inválidos impedem salvar um endereço desconhecido.
+
+`services/pedidos.ts` lê GET `/pedidos` e valida a lista e `meta`. `http.ts` agora preserva esse campo do envelope. `meus-pedidos.tsx` pagina sem duplicar IDs, envia filtros ao servidor, mostra total/status/datas retornados e trata produto nulo. Todos e cancelados estão acessíveis. Erros ao carregar mais mantêm os cartões anteriores; mudar o filtro/conta ignora respostas atrasadas. Não calcula o total histórico usando os preços atuais do catálogo.
+
+O detalhe já recebe o ID da venda na rota. Seu conteúdo fixo foi substituído por uma mensagem de indisponibilidade para não mostrar dados fictícios enquanto a entrega 6 estiver pendente. A leitura completa e o cancelamento serão implementados nela. O pagamento ainda depende da entrega 7 para usar a sacola e o endereço selecionado. `components/tela.tsx` reúne o layout comum dessas telas. `use-hidratado.ts` evita divergência entre HTML estático e parâmetros da URL ao abrir diretamente o formulário/detalhe na web.
+
+Os **23 novos testes** de serviços cobrem contratos, campos permitidos, validação, principal/seleção, remoção, IDs, paginação, status, nulos, datas e falhas, além de concorrência e troca de conta. A infraestrutura isolada existente passou para `tests/ambiente.cjs` e é compartilhada pelas duas suítes, sem dependência nova.
+
+O teste web novo confirmou formulário vazio, erro de cadastro com campos preservados, salvamento/cliques repetidos, edição de número/CEP, seleção preservada por foco, principal independente da seleção, exclusão cancelada/confirmada, leitura após salvamento com falha sem novo POST, saída durante o envio e retorno sem repetir cadastro, histórico com paginação/duplicatas, filtro vazio, filtros rápidos/resposta atrasada, metadados inválidos, ID no detalhe, abertura direta sem erro de hidratação e contas A/B sem compartilhar dados. Os três testes web anteriores também passaram. As capturas ficam em `.expo/enderecos-web.png` e `.expo/historico-web.png`.
+
+```powershell
+npm test
+npx tsc --noEmit
+npx eslint src/services/enderecos.ts src/services/pedidos.ts src/services/http.ts src/hooks/use-enderecos.ts src/hooks/use-hidratado.ts src/components/tela.tsx src/app/enderecos.tsx src/app/editar-endereco.tsx src/app/meus-pedidos.tsx src/app/detalhe-pedido.tsx src/styles/enderecosStyle.ts src/styles/editarEnderecoStyle.ts src/styles/meusPedidosStyle.ts tests
+npx expo export --platform web --output-dir .expo/export-verificacao
+npm run test:web:auth
+npm run test:web:perfil
+npm run test:web:sacola
+npm run test:web:dependencias
+```
+
+O pacote do backend definido durante esta entrega inclui endereços/pedidos e favoritos/foto; recuperação de senha fica para o próximo pacote com SMTP. Essa é uma dependência externa registrada, não código de backend implementado neste repositório. Ainda validar as rotas implantadas, autorização entre clientes, persistência após reinício, fuso/status e comportamento em Android/iOS. O erro global de lint anterior permanece em `use-color-scheme.web.ts:11`.
 
 Ao encerrar uma sessão, acrescente uma linha ao histórico, atualize a tabela de retomada e registre resultados concretos dos testes. Diferencie código implementado de comportamento efetivamente homologado.

@@ -3,6 +3,13 @@ import { StyleSheet } from "react-native";
 import { cores, fontes } from "./variaveis";
 
 const meusPedidosStyle = StyleSheet.create({
+  filtros: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 12 },
+  filtro: { paddingVertical: 7, paddingHorizontal: 10, borderWidth: 1, borderColor: cores.laranja, borderRadius: 10, backgroundColor: cores.branco },
+  filtroAtivo: { backgroundColor: cores.laranja },
+  txtFiltro: { fontSize: 13, fontFamily: fontes.comum, color: cores.preto },
+  btnAtualizar: { alignSelf: "flex-start", paddingVertical: 10 },
+  mensagem: { gap: 10, marginVertical: 15 },
+  txtMensagem: { fontSize: 14, fontFamily: fontes.comum, color: cores.cinza, marginVertical: 5 },
   conteudo: {
     marginTop: 30,
     marginBottom: 30,

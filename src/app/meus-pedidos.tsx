@@ -1,456 +1,91 @@
-import FooterScreen from "@/app/footer";
-import globalStyle from "@/styles/globalStyle";
-import meusPedidosStyle from "@/styles/meusPedidosStyle";
-import { router } from "expo-router";
-import { useState } from "react";
-import {
-  Image,
-  ImageBackground,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Tela } from "@/components/tela";
+import { consultarPedidos, formatarDataPedido, type PaginaPedidos, type PedidoHistorico, type StatusPedido } from "@/services/pedidos";
+import { observarSessao } from "@/services/sessao";
+import estilos from "@/styles/meusPedidosStyle";
+import { cores } from "@/styles/variaveis";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
+
+const filtros: { status?: StatusPedido; label: string }[] = [
+  { label: "Todos" }, { status: "PENDENTE", label: "Pendentes" }, { status: "CONFIRMADO", label: "Confirmados" },
+  { status: "EM_PREPARO", label: "Em preparo" }, { status: "PRONTO", label: "Prontos" },
+  { status: "EM_ENTREGA", label: "Em entrega" }, { status: "ENTREGUE", label: "Entregues" }, { status: "CANCELADO", label: "Cancelados" },
+];
 
 export default function MeusPedidosScreen() {
-  const [filtro, setFiltro] = useState<"andamento" | "entregue">("andamento");
+  const [filtro, setFiltro] = useState<StatusPedido>();
+  const [pedidos, setPedidos] = useState<PedidoHistorico[]>([]);
+  const [paginacao, setPaginacao] = useState<PaginaPedidos | null>(null);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState("");
+  const revisao = useRef(0);
+  const ocupado = useRef(false);
 
-  const itensResumo = [
-    {
-      id: 1,
-      quantidade: 2,
-      nome: "Bolo de Banana Fit",
-      valor: "R$ 151,80",
-      imagem: require("@/assets/images/img/bolo01.png"),
-    },
-    {
-      id: 2,
-      quantidade: 3,
-      nome: "Bolo de Banana Fit",
-      valor: "R$ 227,70",
-      imagem: require("@/assets/images/img/bolo01.png"),
-    },
-    {
-      id: 3,
-      quantidade: 2,
-      nome: "Bolo de Banana Fit",
-      valor: "R$ 151,80",
-      imagem: require("@/assets/images/img/bolo01.png"),
-    },
-  ];
+  const carregar = useCallback(async (pagina = 1) => {
+    if (pagina > 1 && ocupado.current) return;
+    const atual = ++revisao.current;
+    ocupado.current = true;
+    setCarregando(true);
+    setErro("");
+    if (pagina === 1) { setPedidos([]); setPaginacao(null); }
+    try {
+      const resposta = await consultarPedidos(pagina, filtro);
+      if (atual !== revisao.current) return;
+      setPedidos((anteriores) => pagina === 1 ? resposta.pedidos : [...new Map([...anteriores, ...resposta.pedidos].map((pedido) => [pedido.id_venda, pedido])).values()]);
+      setPaginacao(resposta);
+    } catch (error) {
+      if (atual === revisao.current) setErro(error instanceof Error ? error.message : "Não foi possível carregar os pedidos.");
+    } finally {
+      if (atual === revisao.current) { ocupado.current = false; setCarregando(false); }
+    }
+  }, [filtro]);
 
-  const valorTotal = "R$ 487,17";
+  useEffect(() => observarSessao(() => {
+    revisao.current += 1;
+    ocupado.current = false;
+    setPedidos([]);
+    setPaginacao(null);
+    setCarregando(false);
+    setErro("A sessão foi alterada. Atualize os pedidos para continuar.");
+  }), []);
+  useFocusEffect(useCallback(() => {
+    void carregar();
+    return () => { revisao.current += 1; ocupado.current = false; };
+  }, [carregar]));
 
-  return (
-    <View style={globalStyle.container}>
-      <ImageBackground
-        source={require("@/assets/images/img/00_fundo.png")}
-        style={globalStyle.background}
-        resizeMode="cover"
-      >
-        <SafeAreaView style={globalStyle.areaConteudo}>
-          <Pressable
-            style={globalStyle.btnVoltar}
-            onPress={() => {
-              if (router.canGoBack()) {
-                router.back();
-              } else {
-                router.replace("/home");
-              }
-            }}
-          >
-            <Image
-              style={globalStyle.imgVoltar}
-              source={require("@/assets/images/img/voltar.png")}
-            />
-          </Pressable>
-          <ScrollView style={globalStyle.scrollConteudo}>
-            <View style={meusPedidosStyle.conteudo}>
-              <View style={meusPedidosStyle.header}>
-                <View style={meusPedidosStyle.ladoEsquerdo}>
-                  <Text style={meusPedidosStyle.titulo}>Meus pedidos</Text>
-                  <Text style={meusPedidosStyle.subtitulo}>
-                    Acompanhe seus pedidos e seu histórico
-                  </Text>
-                </View>
-                <Image
-                  style={meusPedidosStyle.logo}
-                  source={require("@/assets/images/img/logo.png")}
-                />
-              </View>
-
-              <View style={meusPedidosStyle.main}>
-                <View style={meusPedidosStyle.segmentadoTriplo}>
-                  <Pressable
-                    style={[
-                      meusPedidosStyle.segmentoBtnTriplo,
-                      filtro === "andamento" && meusPedidosStyle.segmentoBtnAtivo,
-                    ]}
-                    onPress={() => setFiltro("andamento")}
-                  >
-                    <Text
-                      style={[
-                        meusPedidosStyle.segmentoTxt,
-                        filtro === "andamento" && meusPedidosStyle.segmentoTxtAtivo,
-                      ]}
-                    >
-                      Em andamento
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    style={[
-                      meusPedidosStyle.segmentoBtnTriplo,
-                      meusPedidosStyle.segmentoDivisor,
-                      filtro === "entregue" && meusPedidosStyle.segmentoBtnAtivo,
-                    ]}
-                    onPress={() => setFiltro("entregue")}
-                  >
-                    <Text
-                      style={[
-                        meusPedidosStyle.segmentoTxt,
-                        filtro === "entregue" && meusPedidosStyle.segmentoTxtAtivo,
-                      ]}
-                    >
-                      Entregue
-                    </Text>
-                  </Pressable>
-                </View>
-
-                {filtro === "andamento" && (
-                <>
-                <View style={meusPedidosStyle.card}>
-                  <View style={meusPedidosStyle.headerPedido}>
-                    <View style={meusPedidosStyle.cardTitulo}>
-                      <Image
-                        style={meusPedidosStyle.iconTitulo}
-                        source={require("@/assets/images/img/preparando-laranja.png")}
-                      />
-                      <Text style={meusPedidosStyle.txtCardTitulo}>
-                        Pedido {"#"}1035
-                      </Text>
-                    </View>
-                    <View style={meusPedidosStyle.topoPedido}>
-                      <Image
-                        style={meusPedidosStyle.imgStatus}
-                        source={require("@/assets/images/img/preparando-laranja.png")}
-                        resizeMode="stretch"
-                      />
-                      <Text style={meusPedidosStyle.txtStatus}>Em preparo</Text>
-                    </View>
-                  </View>
-                  <View style={meusPedidosStyle.areaResumo}>
-                    <View style={meusPedidosStyle.listaItensResumo}>
-                      {itensResumo.map((item) => (
-                        <View style={meusPedidosStyle.itemResumo} key={item.id}>
-                          <View style={meusPedidosStyle.itemResumoEsquerdo}>
-                            <Image
-                              style={meusPedidosStyle.imgItemResumo}
-                              source={item.imagem}
-                              resizeMode="cover"
-                            />
-                            <Text style={meusPedidosStyle.txtItemResumo}>
-                              {item.quantidade}x {item.nome}
-                            </Text>
-                          </View>
-                        </View>
-                      ))}
-                    </View>
-                    <View style={meusPedidosStyle.colunaImgAguardando}>
-                      <Image
-                        style={meusPedidosStyle.imgAguardando}
-                        source={require("@/assets/images/img/preparando-laranja.png")}
-                        resizeMode="stretch"
-                      />
-                    </View>
-                  </View>
-
-                  <View style={globalStyle.separador}></View>
-                  <View style={meusPedidosStyle.rodapeResumo}>
-                    <View style={meusPedidosStyle.total}>
-                      <Text style={meusPedidosStyle.txtTotal}>Total</Text>
-                      <Text style={meusPedidosStyle.valorTotal}>
-                        {valorTotal}
-                      </Text>
-                    </View>
-                    <View style={meusPedidosStyle.areaPrevisão}>
-                      <Image
-                        style={meusPedidosStyle.imgPrevisao}
-                        source={require("@/assets/images/img/previsao.png")}
-                        resizeMode="stretch"
-                      />
-                      <View style={meusPedidosStyle.tempoPrevisão}>
-                        <Text style={meusPedidosStyle.previsaoTxt}>
-                          Previsão
-                        </Text>
-                        <Text style={meusPedidosStyle.previsaoTempo}>
-                          45 - 60 min
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <Pressable
-                    style={meusPedidosStyle.btnDetalhes}
-                    onPress={() => router.push("/detalhe-pedido")}
-                  >
-                    <Text style={meusPedidosStyle.txtDetalhes}>
-                      Ver detalhes
-                    </Text>
-                  </Pressable>
-                </View>
-                <View style={meusPedidosStyle.card}>
-                  <View style={meusPedidosStyle.headerPedido}>
-                    <View style={meusPedidosStyle.cardTitulo}>
-                      <Image
-                        style={meusPedidosStyle.iconTitulo}
-                        source={require("@/assets/images/img/aguardando-laranja.png")}
-                      />
-                      <Text style={meusPedidosStyle.txtCardTitulo}>
-                        Pedido {"#"}1032
-                      </Text>
-                    </View>
-                    <View style={meusPedidosStyle.topoPedido}>
-                      <Image
-                        style={meusPedidosStyle.imgStatus}
-                        source={require("@/assets/images/img/aguardando-laranja.png")}
-                        resizeMode="stretch"
-                      />
-                      <Text style={meusPedidosStyle.txtStatus}>
-                        Aguardando retira
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={meusPedidosStyle.areaResumo}>
-                    <View style={meusPedidosStyle.listaItensResumo}>
-                      {itensResumo.map((item) => (
-                        <View style={meusPedidosStyle.itemResumo} key={item.id}>
-                          <View style={meusPedidosStyle.itemResumoEsquerdo}>
-                            <Image
-                              style={meusPedidosStyle.imgItemResumo}
-                              source={item.imagem}
-                              resizeMode="cover"
-                            />
-                            <Text style={meusPedidosStyle.txtItemResumo}>
-                              {item.quantidade}x {item.nome}
-                            </Text>
-                          </View>
-                        </View>
-                      ))}
-                    </View>
-                    <View style={meusPedidosStyle.colunaImgAguardando}>
-                      <Image
-                        style={meusPedidosStyle.imgAguardando}
-                        source={require("@/assets/images/img/aguardando-laranja.png")}
-                        resizeMode="stretch"
-                      />
-                    </View>
-                  </View>
-
-                  <View style={globalStyle.separador}></View>
-                  <View style={meusPedidosStyle.rodapeResumo}>
-                    <View style={meusPedidosStyle.total}>
-                      <Text style={meusPedidosStyle.txtTotal}>Total</Text>
-                      <Text style={meusPedidosStyle.valorTotal}>
-                        {valorTotal}
-                      </Text>
-                    </View>
-                    <View style={meusPedidosStyle.areaPrevisão}>
-                      <Image
-                        style={meusPedidosStyle.imgPrevisao}
-                        source={require("@/assets/images/img/previsao.png")}
-                        resizeMode="stretch"
-                      />
-                      <View style={meusPedidosStyle.tempoPrevisão}>
-                        <Text style={meusPedidosStyle.previsaoTxt}>
-                          Previsão
-                        </Text>
-                        <Text style={meusPedidosStyle.previsaoTempo}>
-                          40 - 55 min
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <Pressable
-                    style={meusPedidosStyle.btnDetalhes}
-                    onPress={() => router.push("/detalhe-pedido")}
-                  >
-                    <Text style={meusPedidosStyle.txtDetalhes}>
-                      Ver detalhes
-                    </Text>
-                  </Pressable>
-                </View>
-                <View style={meusPedidosStyle.card}>
-                  <View style={meusPedidosStyle.headerPedido}>
-                    <View style={meusPedidosStyle.cardTitulo}>
-                      <Image
-                        style={meusPedidosStyle.iconTitulo}
-                        source={require("@/assets/images/img/delivery-laranja.png")}
-                      />
-                      <Text style={meusPedidosStyle.txtCardTitulo}>
-                        Pedido {"#"}1027
-                      </Text>
-                    </View>
-                    <View style={meusPedidosStyle.topoPedido}>
-                      <Image
-                        style={meusPedidosStyle.imgStatus}
-                        source={require("@/assets/images/img/delivery-laranja.png")}
-                        resizeMode="stretch"
-                      />
-                      <Text style={meusPedidosStyle.txtStatus}>A caminho</Text>
-                    </View>
-                  </View>
-                  <View style={meusPedidosStyle.areaResumo}>
-                    <View style={meusPedidosStyle.listaItensResumo}>
-                      {itensResumo.map((item) => (
-                        <View style={meusPedidosStyle.itemResumo} key={item.id}>
-                          <View style={meusPedidosStyle.itemResumoEsquerdo}>
-                            <Image
-                              style={meusPedidosStyle.imgItemResumo}
-                              source={item.imagem}
-                              resizeMode="cover"
-                            />
-                            <Text style={meusPedidosStyle.txtItemResumo}>
-                              {item.quantidade}x {item.nome}
-                            </Text>
-                          </View>
-                        </View>
-                      ))}
-                    </View>
-                    <View style={meusPedidosStyle.colunaImgAguardando}>
-                      <Image
-                        style={meusPedidosStyle.imgAguardando}
-                        source={require("@/assets/images/img/delivery-laranja.png")}
-                        resizeMode="stretch"
-                      />
-                    </View>
-                  </View>
-
-                  <View style={globalStyle.separador}></View>
-                  <View style={meusPedidosStyle.rodapeResumo}>
-                    <View style={meusPedidosStyle.total}>
-                      <Text style={meusPedidosStyle.txtTotal}>Total</Text>
-                      <Text style={meusPedidosStyle.valorTotal}>
-                        {valorTotal}
-                      </Text>
-                    </View>
-                    <View style={meusPedidosStyle.areaPrevisão}>
-                      <Image
-                        style={meusPedidosStyle.imgPrevisao}
-                        source={require("@/assets/images/img/previsao.png")}
-                        resizeMode="stretch"
-                      />
-                      <View style={meusPedidosStyle.tempoPrevisão}>
-                        <Text style={meusPedidosStyle.previsaoTxt}>
-                          Previsão
-                        </Text>
-                        <Text style={meusPedidosStyle.previsaoTempo}>
-                          15 - 30 min
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={meusPedidosStyle.btnPedido}>
-                    <Pressable
-                      style={[meusPedidosStyle.btnDetalhes, { marginTop: 0 }]}
-                      onPress={() => router.push("/detalhe-pedido")}
-                    >
-                      <Text style={meusPedidosStyle.txtDetalhes}>
-                        Ver detalhes
-                      </Text>
-                    </Pressable>
-                    <Pressable style={meusPedidosStyle.btnRastrear}>
-                      <Text style={meusPedidosStyle.txtRastrear}>Rastrear entrega</Text>
-                    </Pressable>
-                  </View>
-                </View>
-                </>
-                )}
-
-                {filtro === "entregue" && (
-                <View style={meusPedidosStyle.card}>
-                  <View style={meusPedidosStyle.headerPedido}>
-                    <View style={meusPedidosStyle.cardTitulo}>
-                      <Image
-                        style={meusPedidosStyle.iconTitulo}
-                        source={require("@/assets/images/img/entregue-verde.png")}
-                      />
-                      <Text style={meusPedidosStyle.txtCardTituloVerde}>
-                        Pedido {"#"}999
-                      </Text>
-                    </View>
-                    <View style={meusPedidosStyle.topoPedidoVerde}>
-                      <Image
-                        style={meusPedidosStyle.imgStatus}
-                        source={require("@/assets/images/img/entregue-verde.png")}
-                        resizeMode="stretch"
-                      />
-                      <Text style={meusPedidosStyle.txtStatusVerde}>
-                        Entregue
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={meusPedidosStyle.areaResumo}>
-                    <View style={meusPedidosStyle.listaItensResumo}>
-                      {itensResumo.map((item) => (
-                        <View style={meusPedidosStyle.itemResumo} key={item.id}>
-                          <View style={meusPedidosStyle.itemResumoEsquerdo}>
-                            <Image
-                              style={meusPedidosStyle.imgItemResumo}
-                              source={item.imagem}
-                              resizeMode="cover"
-                            />
-                            <Text style={meusPedidosStyle.txtItemResumo}>
-                              {item.quantidade}x {item.nome}
-                            </Text>
-                          </View>
-                        </View>
-                      ))}
-                    </View>
-                    <View style={meusPedidosStyle.colunaImgAguardando}>
-                      <Image
-                        style={meusPedidosStyle.imgAguardando}
-                        source={require("@/assets/images/img/entregue-verde.png")}
-                        resizeMode="stretch"
-                      />
-                    </View>
-                  </View>
-
-                  <View style={globalStyle.separador}></View>
-                  <View style={meusPedidosStyle.rodapeResumo}>
-                    <View style={meusPedidosStyle.total}>
-                      <Text style={meusPedidosStyle.txtTotal}>Total</Text>
-                      <Text style={meusPedidosStyle.valorTotalVerde}>
-                        {valorTotal}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={meusPedidosStyle.btnPedido}>
-                    <Pressable
-                      style={[meusPedidosStyle.btnDetalhes, { marginTop: 0 }]}
-                      onPress={() => router.push("/detalhe-pedido")}
-                    >
-                      <Text style={meusPedidosStyle.txtDetalhes}>
-                        Ver detalhes
-                      </Text>
-                    </Pressable>
-                    <Pressable
-                      style={meusPedidosStyle.btnRastrear}
-                      onPress={() => router.push("/pagamento")}
-                    >
-                      <Text style={meusPedidosStyle.txtRastrear}>
-                        Pedir novamente
-                      </Text>
-                    </Pressable>
-                  </View>
-                </View>
-                )}
-              </View>
-            </View>
-          </ScrollView>
-
-          <FooterScreen />
-        </SafeAreaView>
-      </ImageBackground>
+  return <Tela titulo="Meus pedidos" subtitulo="Acompanhe seus pedidos e seu histórico">
+    <View style={estilos.filtros}>
+      {filtros.map((item) => <Pressable key={item.label} accessibilityRole="button" accessibilityLabel={`Filtrar pedidos: ${item.label}`}
+        aria-selected={filtro === item.status} style={[estilos.filtro, filtro === item.status && estilos.filtroAtivo]}
+        onPress={() => setFiltro(item.status)}><Text style={estilos.txtFiltro}>{item.label}</Text></Pressable>)}
     </View>
-  );
+    <Pressable accessibilityRole="button" disabled={carregando} style={estilos.btnAtualizar} onPress={() => void carregar()}>
+      <Text style={estilos.txtDetalhes}>Atualizar pedidos</Text>
+    </Pressable>
+    {erro ? <View style={estilos.mensagem}>
+      <Text style={estilos.txtMensagem} accessibilityRole="alert">{erro}</Text>
+      <Pressable accessibilityRole="button" disabled={carregando} style={estilos.btnDetalhes}
+        onPress={() => void carregar(paginacao ? paginacao.pagina + 1 : 1)}><Text style={estilos.txtDetalhes}>Tentar novamente</Text></Pressable>
+    </View> : null}
+    {carregando ? <ActivityIndicator color={cores.laranja} accessibilityLabel="Carregando pedidos" /> : null}
+    {!carregando && !erro && pedidos.length === 0 ? <Text style={estilos.txtMensagem}>Nenhum pedido encontrado{filtro ? " neste filtro" : ""}.</Text> : null}
+    {pedidos.map((pedido) => <View key={pedido.id_venda} style={estilos.card}>
+      <View style={estilos.headerPedido}>
+        <Text style={estilos.txtCardTitulo}>Pedido #{pedido.id_venda}</Text>
+        <Text style={estilos.txtMensagem}>{pedido.status_descricao_venda}</Text>
+      </View>
+      {pedido.data_venda ? <Text style={estilos.txtMensagem}>Realizado em: {formatarDataPedido(pedido.data_venda)}</Text> : null}
+      <Text style={estilos.txtMensagem}>{pedido.entrega_venda === "SIM" ? "Entrega" : "Retirada"}: {formatarDataPedido(pedido.data_entrega_venda)}</Text>
+      {pedido.itens.map((item) => <Text key={item.id_item} style={estilos.txtMensagem}>{item.qtde_item} × {item.produto?.nome_produto ?? "Produto indisponível"}</Text>)}
+      <Text style={estilos.txtTotal}>Total: {pedido.valor_venda.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel={`Ver detalhes do pedido ${pedido.id_venda}`} style={estilos.btnDetalhes}
+        onPress={() => router.push({ pathname: "/detalhe-pedido", params: { id: pedido.id_venda } })}>
+        <Text style={estilos.txtDetalhes}>Ver detalhes</Text>
+      </Pressable>
+    </View>)}
+    {paginacao ? <Text style={estilos.txtMensagem}>Página {paginacao.pagina} de {paginacao.ultimaPagina} · {paginacao.total} pedido(s)</Text> : null}
+    {paginacao && paginacao.pagina < paginacao.ultimaPagina ? <Pressable accessibilityRole="button" disabled={carregando} style={estilos.btnDetalhes}
+      onPress={() => void carregar(paginacao.pagina + 1)}><Text style={estilos.txtDetalhes}>{carregando ? "Carregando..." : "Carregar mais pedidos"}</Text></Pressable> : null}
+  </Tela>;
 }

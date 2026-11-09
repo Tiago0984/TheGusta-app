@@ -3,6 +3,8 @@ import { StyleSheet } from "react-native";
 import { cores, fontes } from "./variaveis";
 
 const editarEnderecoStyle = StyleSheet.create({
+  mensagem: { color: cores.preto, fontFamily: fontes.comum, fontSize: 16, marginVertical: 12 },
+  desabilitado: { opacity: 0.5 },
   conteudo: {
     marginTop: 30,
     marginBottom: 30,

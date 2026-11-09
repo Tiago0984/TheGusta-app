@@ -3,6 +3,11 @@ import { StyleSheet } from "react-native";
 import { cores, fontes } from "./variaveis";
 
 const enderecosStyle = StyleSheet.create({
+  mensagem: { paddingVertical: 15, gap: 10 },
+  txtMensagem: { fontFamily: fontes.comum, color: cores.cinza, fontSize: 14, marginVertical: 12 },
+  desabilitado: { opacity: 0.5 },
+  fundoModal: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 24 },
+  cardModal: { width: "100%", maxWidth: 400, backgroundColor: cores.branco, borderRadius: 15, padding: 24 },
   conteudo: {
     marginTop: 30,
     marginBottom: 30,
@@ -65,6 +70,7 @@ const enderecosStyle = StyleSheet.create({
   },
 
   tituloLinha: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
@@ -87,6 +93,7 @@ const enderecosStyle = StyleSheet.create({
   },
 
   tituloEndereco: {
+    flexShrink: 1,
     fontSize: 18,
     color: cores.preto,
     fontFamily: fontes.negrito,

@@ -1,53 +1,6 @@
-/* global __dirname */
 const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const path = require("node:path");
 const test = require("node:test");
-const vm = require("node:vm");
-const ts = require("typescript");
-
-// Executa os serviços reais com transporte, armazenamento e navegação isolados.
-// O TypeScript já faz parte do projeto; não requer outro runner ou API real.
-function ambiente(responder, dados = {}, opcoesAmbiente = {}) {
-  const armazenamento = new Map(Object.entries(dados));
-  const chamadas = [];
-  const navegacoes = [];
-  const cache = new Map();
-  const storage = {
-    getItem: async (chave) => armazenamento.get(chave) ?? null,
-    setItem: async (chave, valor) => { armazenamento.set(chave, valor); },
-    removeItem: async (chave) => { armazenamento.delete(chave); },
-    multiRemove: async (chaves) => { chaves.forEach((chave) => armazenamento.delete(chave)); },
-  };
-  const contexto = vm.createContext({
-    console, Error, Headers, Response, Blob, File,
-    FormData: opcoesAmbiente.FormData || FormData,
-    fetch: async (url, opcoes) => {
-      chamadas.push({ url, ...opcoes });
-      return responder(url, opcoes);
-    },
-  });
-  function carregar(nome) {
-    const arquivo = path.resolve(__dirname, "../src", `${nome}.ts`);
-    if (cache.has(arquivo)) return cache.get(arquivo).exports;
-    const modulo = { exports: {} };
-    cache.set(arquivo, modulo);
-    const codigo = ts.transpileModule(fs.readFileSync(arquivo, "utf8"), {
-      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
-    }).outputText;
-    const importar = (id) => {
-      if (id === "@react-native-async-storage/async-storage") return storage;
-      if (id === "expo-router") return { router: { replace: (rota) => navegacoes.push(rota) } };
-      if (id === "react-native") return { Platform: { OS: opcoesAmbiente.plataforma || "web" } };
-      if (id.startsWith("@/")) return carregar(id.slice(2));
-      throw new Error(`Import não previsto: ${id}`);
-    };
-    new vm.Script(`(function(require, module, exports) { ${codigo}\n})`, { filename: arquivo })
-      .runInContext(contexto)(importar, modulo, modulo.exports);
-    return modulo.exports;
-  }
-  return { carregar, armazenamento, chamadas, navegacoes, storage };
-}
+const { ambiente } = require("./ambiente.cjs");
 
 const resposta = (data, status = 200, message) => Response.json({ success: status < 400, data, message }, { status });
 const cliente = { id_cliente: 1, nome_cliente: "Cliente inicial", email_cliente: "teste@example.com", telefone_cliente: null, cpf_cnpj_cliente: null, data_nasc_cliente: null, foto_cliente: null };
