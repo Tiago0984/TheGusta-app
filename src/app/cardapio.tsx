@@ -10,22 +10,24 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import globalStyle from "@/styles/globalStyle";
 import cardapioStyle from "@/styles/cardapioStyle";
 import { cores } from "@/styles/variaveis";
 import FooterScreen from "@/app/footer";
 
 import { IMAGEM } from "@/config/api";
-import { ApiError, getCategorias, getProdutos } from "@/services/api";
+import { ApiError, getCategorias, getProdutos, type Categoria, type Produto } from "@/services/api";
+import { useFavoritos } from "@/hooks/use-favoritos";
+import { BotaoFavorito, MensagemFavoritos } from "@/components/favoritos";
 
 export default function CardapioScreen() {
-  const [favoritos, setFavoritos] = useState(Array(20).fill(false));
+  const { erro: erroFavoritos, atualizarFavoritos } = useFavoritos();
 
   // Estado para armazenar os produtos e categorias carregados da API (Listar produtos e categorias)
-  const [produtos, setProdutos] = useState<any[]>([]);
-  const [categorias, setCategorias] = useState<any[]>([]);
-  const [semImagem, setSemImagem] = useState<Number[]>([]);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [semImagem, setSemImagem] = useState<number[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
   const { categoria, busca: buscaParam } = useLocalSearchParams();
@@ -42,11 +44,7 @@ export default function CardapioScreen() {
 
       const produtosAtivos = produtosData
         .filter((produto) => produto.status_produto === "ATIVO")
-        .map((produto) => ({
-          ...produto,
-          favorito: false,
-        }))
-        .sort((a, b) => a.nome_produto.localeCompare(b.nome_produto));
+        .sort((a, b) => a.nome_produto.localeCompare(b.nome_produto, "pt-BR"));
       setProdutos(produtosAtivos);
 
       // A API já devolve as categorias em ordem alfabética
@@ -66,22 +64,23 @@ export default function CardapioScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    carregarDados();
-  }, [carregarDados]);
-
-  useEffect(() => {
-    if (buscaParam) {
-      const texto = String(buscaParam);
-      setTextoBusca(texto);
-      setBusca(texto);
-    }
-
-  },[buscaParam]);
+  const catalogoSolicitado = useRef(false);
+  useFocusEffect(useCallback(() => {
+    if (catalogoSolicitado.current) return;
+    catalogoSolicitado.current = true;
+    void carregarDados();
+  }, [carregarDados]));
 
   // Estado para armazenar o texto digitado no campo de busca (Buscar produtos)
   const [textoBusca, setTextoBusca] = useState(String(buscaParam ?? ""));
   const [busca, setBusca] = useState(String(buscaParam ?? ""));
+  const buscaRecebida = String(buscaParam ?? "");
+  const [parametroAplicado, setParametroAplicado] = useState(buscaRecebida);
+  if (parametroAplicado !== buscaRecebida) {
+    setParametroAplicado(buscaRecebida);
+    setTextoBusca(buscaRecebida);
+    setBusca(buscaRecebida);
+  }
 
   const produtosFiltrados = produtos.filter((produto) =>
     produto.nome_produto.toLowerCase().includes(busca.trim().toLowerCase()),
@@ -90,7 +89,7 @@ export default function CardapioScreen() {
   const categoriasComProdutos = categorias.filter((categoria) =>
     produtosFiltrados.some(
       (produto) =>
-        produto.categoria_produto.id_categoria === categoria.id_categoria,
+        Number(produto.id_categoria) === Number(categoria.id_categoria),
     ),
   );
 
@@ -105,7 +104,7 @@ export default function CardapioScreen() {
     const idCategoria = Number(categoria);
     const intervalo = setTimeout(() => {
       const posicao = posicaoCategoria.current[idCategoria];
-      if (posicao != undefined) {
+      if (posicao !== undefined) {
         scrollRef.current?.scrollTo({
           y: posicao,
           animated: true,
@@ -116,22 +115,6 @@ export default function CardapioScreen() {
     }, 100);
     return () => clearInterval(intervalo);
   }, [categoria, categorias, produtos]);
-
-  function alterarFavorito(id: number) {
-    setProdutos((produtoFavorito) =>
-      produtoFavorito.map((produto) =>
-        produto.id_produto === id
-          ? { ...produto, favorito: !produto.favorito }
-          : produto,
-      ),
-    );
-  }
-
-  function alternarFavorito(indice: number) {
-    setFavoritos((atual) =>
-      atual.map((valor, i) => (i === indice ? !valor : valor)),
-    );
-  }
 
   function irParaCategoria(idCategoria: number) {
     const posicao = posicaoCategoria.current[idCategoria];
@@ -179,6 +162,7 @@ export default function CardapioScreen() {
               </View>
 
               <View style={cardapioStyle.main}>
+                <MensagemFavoritos erro={erroFavoritos} tentarNovamente={atualizarFavoritos} />
                 <View style={cardapioStyle.buscarProduto}>
                   <TextInput
                     style={cardapioStyle.txtProduto}
@@ -252,8 +236,8 @@ export default function CardapioScreen() {
                         {produtosFiltrados
                           .filter(
                             (produto) =>
-                              produto.categoria_produto.id_categoria ===
-                              categoria.id_categoria,
+                              Number(produto.id_categoria) ===
+                              Number(categoria.id_categoria),
                           )
                           .map((produto) => (
                             <View
@@ -267,9 +251,7 @@ export default function CardapioScreen() {
                                   source={
                                     semImagem.includes(produto.id_produto) ||
                                     !produto.foto_produto
-                                      ? {
-                                          uri: `${IMAGEM}/produto/sem-imagem.png`,
-                                        }
+                                      ? require("@/assets/images/img/sem-imagem.png")
                                       : {
                                           uri: `${IMAGEM}/${produto.foto_produto}`,
                                         }
@@ -281,16 +263,7 @@ export default function CardapioScreen() {
                                     ]);
                                   }}
                                 />
-                                <Pressable
-                                  style={cardapioStyle.btnFavorito}
-                                  onPress={() =>
-                                    alterarFavorito(produto.id_produto)
-                                  }
-                                >
-                                  <Text style={cardapioStyle.txtFavorito}>
-                                    {produto.favorito ? "★" : "☆"}
-                                  </Text>
-                                </Pressable>
+                                <BotaoFavorito idProduto={produto.id_produto} nomeProduto={produto.nome_produto} estiloBotao={cardapioStyle.btnFavorito} estiloTexto={cardapioStyle.txtFavorito} />
                               </View>
                               <View style={cardapioStyle.infoDestaque}>
                                 <Text style={cardapioStyle.txtDestaque}>
@@ -310,6 +283,8 @@ export default function CardapioScreen() {
                                   </Text>
                                   <Pressable
                                     style={cardapioStyle.btnDetalhes}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Ver detalhes: ${produto.nome_produto}`}
                                     onPress={() =>
                                       router.push({
                                         pathname: "/detalhe-produto",

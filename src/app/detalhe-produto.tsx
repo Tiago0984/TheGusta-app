@@ -2,8 +2,8 @@ import FooterScreen from "@/app/footer";
 import detalheProdutoStyle from "@/styles/detalheProdutoStyle";
 import globalStyle from "@/styles/globalStyle";
 import { cores } from "@/styles/variaveis";
-import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -16,7 +16,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { IMAGEM } from "@/config/api";
-import { ApiError, getCategorias, getProduto } from "@/services/api";
+import { ApiError, getCategorias, getProduto, type Produto } from "@/services/api";
+import { useFavoritos } from "@/hooks/use-favoritos";
+import { BotaoFavorito, MensagemFavoritos } from "@/components/favoritos";
 
 function formatarPreco(valor: number) {
   return Number(valor).toLocaleString("pt-BR", {
@@ -26,12 +28,16 @@ function formatarPreco(valor: number) {
 }
 
 export default function DetalheProdutoScreen() {
-  const [favorito, setFavorito] = useState(false);
+  const { slug: parametro } = useLocalSearchParams<{ slug?: string | string[] }>();
+  const slug = typeof parametro === "string" ? parametro : "";
+  return <DetalheProdutoConteudo key={slug} slug={slug} />;
+}
 
-  const { slug } = useLocalSearchParams();
+function DetalheProdutoConteudo({ slug }: { slug: string }) {
+  const { erro: erroFavoritos, atualizarFavoritos } = useFavoritos(slug);
 
   // Estado para armazenar o produto carregado da API (Detalhe do produto)
-  const [produto, setProduto] = useState<any>(null);
+  const [produto, setProduto] = useState<Produto | null>(null);
   const [descricaoCategoria, setDescricaoCategoria] = useState("");
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
@@ -48,6 +54,7 @@ export default function DetalheProdutoScreen() {
     try {
       setCarregando(true);
       setErro("");
+      setSemImagem(false);
 
       const [produtoCarregado, categoriasData] = await Promise.all([
         getProduto(String(slug)),
@@ -56,7 +63,7 @@ export default function DetalheProdutoScreen() {
       setProduto(produtoCarregado);
 
       const categoriaDoProduto = categoriasData.find(
-        (categoria) => categoria.id_categoria === produtoCarregado.id_categoria,
+        (categoria) => Number(categoria.id_categoria) === Number(produtoCarregado.id_categoria),
       );
       setDescricaoCategoria(categoriaDoProduto?.descricao_categoria ?? "");
     } catch (error) {
@@ -71,9 +78,9 @@ export default function DetalheProdutoScreen() {
     }
   }, [slug]);
 
-  useEffect(() => {
-    carregarProduto();
-  }, [carregarProduto]);
+  useFocusEffect(useCallback(() => {
+    void carregarProduto();
+  }, [carregarProduto]));
 
   function aumentarQuantidade() {
     setQuantidade(quantidade + 1);
@@ -136,15 +143,9 @@ export default function DetalheProdutoScreen() {
                       {produto.nome_produto}
                     </Text>
                   </View>
-                  <Pressable
-                    style={detalheProdutoStyle.btnFavorito}
-                    onPress={() => setFavorito((atual) => !atual)}
-                  >
-                    <Text style={detalheProdutoStyle.txtFavorito}>
-                      {favorito ? "★" : "☆"}
-                    </Text>
-                  </Pressable>
+                  <BotaoFavorito idProduto={produto.id_produto} nomeProduto={produto.nome_produto} estiloBotao={detalheProdutoStyle.btnFavorito} estiloTexto={detalheProdutoStyle.txtFavorito} />
                 </View>
+                <MensagemFavoritos erro={erroFavoritos} tentarNovamente={atualizarFavoritos} />
                 <View style={detalheProdutoStyle.main}>
                   <Image
                     style={detalheProdutoStyle.imgProduto}

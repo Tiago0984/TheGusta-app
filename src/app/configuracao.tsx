@@ -13,12 +13,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { IMAGEM } from "@/config/api";
 import { useCliente } from "@/hooks/use-cliente";
 
 export default function ConfiguracaoScreen() {
   const [notificacoesAtivas, setNotificacoesAtivas] = useState(true);
-  const { cliente, erro: erroCliente, atualizarCliente } = useCliente();
+  const { cliente, fotoUrl, erro: erroCliente, atualizarCliente } = useCliente();
   const [fotoClienteErro, setFotoClienteErro] = useState<string | null>(null);
 
   return (
@@ -70,11 +69,12 @@ export default function ConfiguracaoScreen() {
                     <Image
                       style={configuracaoStyle.imgPerfil}
                       source={
-                        cliente?.foto_cliente && fotoClienteErro !== cliente.foto_cliente
-                          ? { uri: `${IMAGEM}/${cliente.foto_cliente}` }
+                        fotoUrl && fotoClienteErro !== fotoUrl
+                          ? { uri: fotoUrl }
                           : require("@/assets/images/img/user.png")
                       }
-                      onError={() => setFotoClienteErro(cliente?.foto_cliente ?? null)}
+                      onError={() => setFotoClienteErro(fotoUrl)}
+                      accessibilityLabel="Foto do perfil"
                     />
                   </View>
                   <View style={configuracaoStyle.textoSaudacao}>

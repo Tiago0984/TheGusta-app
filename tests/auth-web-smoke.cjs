@@ -79,7 +79,7 @@ async function executar() {
       } else if (rota === "/auth/redefinir-senha") {
         if (senhaRecusada) { status = 422; message = "A senha não foi aceita."; }
       } else if (rota === "/cliente") data = cliente;
-      else if (["/produtos", "/categorias", "/banners"].includes(rota)) data = [];
+      else if (["/produtos", "/categorias", "/banners", "/favoritos"].includes(rota)) data = [];
       else { status = 500; message = `Chamada não prevista no teste: ${rota}`; }
       return route.fulfill({ status, headers, contentType: "application/json", body: JSON.stringify({ success: status < 400, data, message }) });
     });

@@ -1,6 +1,6 @@
 # Progresso da implementação
 
-Última atualização: **09/11/2026**. A implementação foi retomada no computador original. Fundação, cadastro e recuperação foram implementados e validados localmente. Foto e favoritos são a próxima entrega.
+Última atualização: **09/11/2026**. Fundação, cadastro/recuperação, foto de perfil e favoritos foram implementados e validados localmente. A próxima entrega é a sacola dinâmica por cliente.
 
 Plano de referência: [plano-implementacao-pdfs.md](plano-implementacao-pdfs.md). Instalação e contexto: [CONTINUAR-AQUI.md](../CONTINUAR-AQUI.md). Materiais: [referencias/README.md](referencias/README.md).
 
@@ -8,7 +8,7 @@ Marque uma entrega somente após implementar e validar seus critérios de aceite
 
 - [x] **1 — Fundação técnica:** contratos atuais de login/cliente conferidos no código existente; serviços autenticados, tipos/erros, tratamento de 401, atualização compartilhada do cliente e consultas públicas preservadas. Validada com testes isolados e build web; homologação com a API real ainda pendente.
 - [x] **2 — Cadastro e recuperação:** formulário validado, cadastro/sessão, solicitação do código, quatro dígitos e redefinição; nascimento nulo no perfil. Testes de serviços e navegador com API simulada aprovados; recebimento de e-mail e API real ainda não homologados.
-- [ ] **3 — Foto e favoritos:** upload validado e sincronização do cliente; favoritos persistentes em Home, Cardápio e Detalhe com erros e bloqueios.
+- [x] **3 — Foto e favoritos:** upload validado e sincronização do cliente; consulta/adição/remoção de favoritos em Home, Cardápio e Detalhe com erros e bloqueios. Serviços e navegador com API simulada aprovados; API real e câmera/permissões em dispositivo ainda pendentes.
 - [ ] **4 — Sacola:** armazenamento por cliente, adição/união/quantidade/remoção, limite 1–99, estados de carregamento/erro/vazio e subtotal real.
 - [ ] **5 — Dependências do checkout:** endereços reais e seleção; histórico com contrato confirmado e navegação com ID para detalhe.
 - [ ] **6 — Detalhes reais:** consulta por ID, dados/totais/status/modalidade reais, nulos, cancelamento e erros.
@@ -24,13 +24,13 @@ Dependências adicionais para uma conta nova comprar com entrega:
 
 | Campo | Situação atual |
 | --- | --- |
-| Última entrega concluída | 2 — Cadastro e recuperação, validada localmente em 09/11/2026 |
+| Última entrega concluída | 3 — Foto e favoritos, validada localmente em 09/11/2026 |
 | Entrega em andamento | Nenhuma |
-| Próxima ação | Entrega 3: upload da foto e favoritos nas três telas; confirmar contratos complementares de histórico/endereços antes da entrega 5 |
+| Próxima ação | Entrega 4: sacola persistente por cliente; confirmar contratos complementares de histórico/endereços antes da entrega 5 |
 | Base do código auditado | `cc4b1d6bd88186c8c2c5d24e955f336ae9f5fb13` |
 | Contratos a esclarecer | Histórico/paginação/filtros; criação/edição de endereços; semântica de status e fuso; idempotência, se suportada |
-| Verificação atual | 53 testes de serviços aprovados; TypeScript e lint dos arquivos alterados aprovados; export web com 22 rotas aprovado; fluxo de autenticação aprovado no Edge headless com API simulada. Lint global ainda tem 5 erros e 21 avisos preexistentes nos arquivos restantes |
-| Homologação funcional | Interface web exercitada com respostas simuladas. API real, recebimento do e-mail e dispositivos Android/iOS ainda não homologados |
+| Verificação atual | 84 testes de serviços, TypeScript e lint dos arquivos alterados aprovados; export web com 22 rotas aprovado; testes de autenticação e perfil/favoritos aprovados no Edge headless com API simulada; configuração nativa do ImagePicker conferida por introspecção. Lint global ainda tem 1 erro e 17 avisos preexistentes nos arquivos restantes |
+| Homologação funcional | Interface web exercitada com respostas simuladas. API real, recebimento de e-mail, câmera/permissões e dispositivos Android/iOS ainda não homologados |
 
 **Histórico de trabalho**
 
@@ -39,6 +39,7 @@ Dependências adicionais para uma conta nova comprar com entrega:
 | 06/11/2026 | Preparação | Plano, contexto de retomada, checklist e oito PDFs no repositório | Comparação estática; verificações anteriores detalhadas no plano | Iniciar entrega 1 |
 | 09/11/2026 | 1 — Fundação técnica | HTTP/sessão centralizados; login com erros visíveis; cliente compartilhado e atualizado por foco; salvamento do perfil atualiza Home/Configuração sem sobrescrever formulário em edição | 18 testes isolados, TypeScript, lint dos arquivos alterados e export web aprovados | Entrega 2; homologar API/dispositivos e confirmar contratos faltantes |
 | 09/11/2026 | 2 — Cadastro e recuperação | Cadastro com validação, aceite e sessão; solicitação de código; quatro dígitos com foco/Backspace/colagem; validação e redefinição antes de voltar ao login; mensagens e bloqueios de envio | 53 testes de serviços, TypeScript, lint dos arquivos alterados, export web e teste de interface no Edge com API simulada aprovados | Entrega 3; homologar API real/e-mail e Android/iOS |
+| 09/11/2026 | 3 — Foto e favoritos | Upload multipart com validação e foto compartilhada; favoritos autenticados nas três telas, sincronizados por foco e resposta da API; bloqueios e erros com nova tentativa; permissões nativas configuradas | 84 testes, TypeScript, lint dos arquivos alterados, export web, introspecção da configuração e os dois testes de navegador aprovados | Entrega 4; homologar API real, câmera, permissões e formatos nos dispositivos |
 
 **Detalhes da fundação**
 
@@ -98,5 +99,43 @@ npm run test:web:auth
 ```
 
 O teste inicia e encerra seu próprio servidor local e navegador headless. As capturas são salvas em `.expo/cadastro-web.png` e `.expo/redefinir-senha-web.png`, fora do Git. Receber o código em e-mail real, validade/uso único, regras adicionais do servidor e comportamento de teclado/autofill no Android/iOS seguem para homologação.
+
+**Detalhes de foto e favoritos**
+
+| Arquivo | Comportamento |
+| --- | --- |
+| `src/services/favoritos.ts` | GET/POST `/favoritos` e DELETE `/favoritos/{id_produto}` autenticados; IDs normalizados e estado compartilhado; bloqueio síncrono por produto; respostas antigas não desfazem alterações nem afetam outra sessão |
+| `src/hooks/use-favoritos.ts` | Consulta por foco, independente do carregamento do catálogo; a mudança de produto também permite atualizar a consulta |
+| `src/components/favoritos.tsx` | Estrela e mensagem reutilizadas nas três telas; estado muda após confirmação, bloqueia operação enquanto consulta/processa ou não conhece o estado após erro, e permite tentar a consulta novamente |
+| `src/services/foto-perfil.ts` | Validação JPG/PNG/WEBP e limite de 2 MB; File/Blob na web e descritor de arquivo no FormData nativo; POST `/cliente/foto` com o campo `foto_cliente` e a sessão esperada |
+| `src/services/cliente.ts` e `src/hooks/use-cliente.ts` | Foto atualizada sem substituir os outros dados; URL com versão para renovar a imagem mesmo se o servidor mantiver o nome; GET anterior não desfaz atualização e PUT de dados pessoais não sobrescreve a foto |
+| `src/app/editar-perfil.tsx` | Câmera/galeria, prévia transitória, progresso, bloqueio de seleção/envio e mensagens separadas das alterações pessoais. Cancelar o seletor web não impede abrir outro |
+| `app.json` | Plugin ImagePicker com textos de câmera/fotos em português e `microphonePermission: false` |
+| `tests/perfil-favoritos-web-smoke.cjs` | Verificação da interface com dados e uploads simulados, sem permitir chamadas externas reais |
+
+Os exemplos dos PDFs foram adaptados ao estado compartilhado da fundação: os favoritos ficam separados dos objetos de catálogo. Assim, as três telas usam o mesmo estado confirmado, sem duplicar funções de POST/DELETE ou atualizar produtos apenas em memória. O catálogo e as categorias continuam utilizáveis quando a consulta de favoritos falha; as consultas de favoritos por foco não precisam recarregar os banners/categorias. A Home continua mostrando somente produtos ativos em destaque.
+
+No perfil, a foto é enviada imediatamente após selecionar/capturar, de forma independente do botão de salvar os dados pessoais. Erros de formato, tamanho ou upload descartam a prévia e preservam a foto anterior. O retorno precisa confirmar `foto_cliente`; o serviço altera somente esse campo. A versão da URL e o fallback por URL permitem exibir uma nova imagem mesmo após uma falha anterior ou retorno do mesmo caminho pelo servidor.
+
+Na web, a validação confere o tamanho do File/Blob efetivamente enviado, além dos metadados. No nativo, usa o tamanho informado pelo ImagePicker quando disponível; o servidor continua responsável por validar os bytes e o limite. Os testes dos descritores Android/iOS são simulações, não execução em aparelho. Uma troca de sessão durante a preparação do arquivo impede enviar a imagem com a conta nova.
+
+Também foram corrigidos os erros de lint dos arquivos Cardápio/Detalhe tocados nesta entrega, preservados busca/contador/subtotal e adicionados rótulos acessíveis aos botões de navegação e favoritos. O erro global restante está em `src/hooks/use-color-scheme.web.ts`, fora desta entrega.
+
+O teste no navegador confirmou favoritos existentes, adicionar/remover nas três telas, cliques duplos, persistência após recarregar, erro de consulta sem perder o catálogo, nova tentativa, busca e troca de conta. Para foto, confirmou cancelamento, rejeição de GIF e arquivo maior que 2 MB, falha do servidor, envio multipart com Bearer, progresso/bloqueio, manutenção do nome ainda não salvo e atualização das imagens em Home e Configurações.
+
+Para repetir as verificações, usando a instalação opcional de Playwright descrita acima:
+
+```powershell
+npm test
+npx tsc --noEmit
+npx eslint src/services src/hooks/use-cliente.ts src/hooks/use-favoritos.ts src/components/favoritos.tsx src/app/home.tsx src/app/cardapio.tsx src/app/detalhe-produto.tsx src/app/editar-perfil.tsx src/app/configuracao.tsx src/app/footer.tsx tests
+npx expo export --platform web --output-dir .expo/export-verificacao
+npm run test:web:auth
+npm run test:web:perfil
+```
+
+As capturas desta entrega ficam em `.expo/favoritos-web.png` e `.expo/foto-perfil-web.png`. `npx expo config --type introspect --json` foi usado para conferir os textos de permissão gerados, sem criar projetos nativos. Alterações do config plugin exigem um novo build nativo para aparecer no aplicativo instalado, conforme a [documentação do ImagePicker no SDK 57](https://docs.expo.dev/versions/v57.0.0/sdk/imagepicker/).
+
+Antes da homologação final, validar a API real, persistência entre dispositivos, câmera permitida/negada, cancelamento no seletor nativo, recorte/qualidade e formatos/tamanho em Android/iOS. Nenhuma foto real foi enviada ao servidor nesta implementação.
 
 Ao encerrar uma sessão, acrescente uma linha ao histórico, atualize a tabela de retomada e registre resultados concretos dos testes. Diferencie código implementado de comportamento efetivamente homologado.

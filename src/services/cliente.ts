@@ -4,11 +4,12 @@ import type { Cliente, DadosPerfil } from "@/types/cliente";
 
 interface EstadoCliente {
   cliente: Cliente | null;
+  versaoFoto: number;
   carregando: boolean;
   erro: string;
 }
 
-let estado: EstadoCliente = { cliente: null, carregando: false, erro: "" };
+let estado: EstadoCliente = { cliente: null, versaoFoto: 0, carregando: false, erro: "" };
 let revisao = 0;
 let consultaPendente: Promise<void> | null = null;
 const ouvintes = new Set<() => void>();
@@ -21,7 +22,7 @@ function publicar(novoEstado: EstadoCliente) {
 observarSessao(() => {
   revisao += 1;
   consultaPendente = null;
-  publicar({ cliente: null, carregando: false, erro: "" });
+  publicar({ cliente: null, versaoFoto: 0, carregando: false, erro: "" });
 });
 
 export function observarCliente(ouvinte: () => void) {
@@ -49,6 +50,11 @@ export function carregarCliente(): Promise<void> {
       if (revisaoConsulta === revisao) {
         publicar({
           cliente: { ...data, id_cliente: Number(data.id_cliente) },
+          versaoFoto: data.foto_cliente
+            ? data.foto_cliente === estado.cliente?.foto_cliente && estado.versaoFoto > 0
+              ? estado.versaoFoto
+              : Math.max(Date.now(), estado.versaoFoto + 1)
+            : 0,
           carregando: false,
           erro: "",
         });
@@ -79,12 +85,16 @@ export async function salvarDadosPerfil(dados: DadosPerfil) {
     json: dados,
   });
   if (clienteAnterior && estado.cliente?.id_cliente === clienteAnterior.id_cliente) {
+    const camposRetornados = Object.fromEntries(
+      Object.entries(resposta.data ?? {}).filter(([campo]) => Object.hasOwn(dados, campo)),
+    ) as Partial<DadosPerfil>;
     revisao += 1;
     publicar({
+      ...estado,
       cliente: {
         ...estado.cliente,
         ...dados,
-        ...resposta.data,
+        ...camposRetornados,
         id_cliente: clienteAnterior.id_cliente,
       },
       carregando: false,
@@ -92,4 +102,17 @@ export async function salvarDadosPerfil(dados: DadosPerfil) {
     });
   }
   return resposta.message || "Dados atualizados com sucesso.";
+}
+
+export function atualizarFotoCliente(foto: string, idCliente: number) {
+  if (!estado.cliente || estado.cliente.id_cliente !== idCliente) {
+    throw new ApiError("O perfil foi alterado. Abra novamente a tela de perfil.");
+  }
+  revisao += 1;
+  publicar({
+    ...estado,
+    cliente: { ...estado.cliente, foto_cliente: foto },
+    versaoFoto: Math.max(Date.now(), estado.versaoFoto + 1),
+    carregando: false,
+  });
 }

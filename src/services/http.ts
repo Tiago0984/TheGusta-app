@@ -17,17 +17,21 @@ export interface RespostaApi<T> {
 
 type OpcoesApi = RequestInit & {
   autenticado?: boolean;
+  tokenEsperado?: string | null;
   json?: unknown;
 };
 
 export async function apiRequest<T>(
   caminho: string,
-  { autenticado = false, json, ...opcoes }: OpcoesApi = {},
+  { autenticado = false, tokenEsperado, json, ...opcoes }: OpcoesApi = {},
 ): Promise<RespostaApi<T>> {
   const token = autenticado ? await lerToken() : null;
   if (autenticado && !token) {
     if (await encerrarSessao(null)) router.replace("/");
     throw new ApiError("Sessão expirada. Faça login novamente.", 401);
+  }
+  if (autenticado && tokenEsperado !== undefined && token !== tokenEsperado) {
+    throw new ApiError("A sessão foi alterada. Tente novamente.", 409);
   }
 
   const headers = new Headers(opcoes.headers);

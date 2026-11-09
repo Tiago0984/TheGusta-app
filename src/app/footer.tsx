@@ -13,6 +13,8 @@ export default function FooterScreen() {
       <Pressable
         style={globalStyle.btnFooter}
         onPress={() => router.navigate("/home")}
+        accessibilityRole="button"
+        accessibilityLabel="Ir para Home"
       >
         <Image source={require("@/assets/images/img/home.png")} />
         <Text
@@ -28,6 +30,8 @@ export default function FooterScreen() {
       <Pressable
         style={globalStyle.btnFooter}
         onPress={() => router.navigate("/cardapio")}
+        accessibilityRole="button"
+        accessibilityLabel="Ir para Cardápio"
       >
         <Image source={require("@/assets/images/img/cardapio.png")} />
         <Text
@@ -43,6 +47,8 @@ export default function FooterScreen() {
       <Pressable
         style={globalStyle.btnFooter}
         onPress={() => router.navigate("/sacola")}
+        accessibilityRole="button"
+        accessibilityLabel="Ir para Sacola"
       >
         <Image source={require("@/assets/images/img/sacola.png")} />
         <Text
@@ -58,6 +64,8 @@ export default function FooterScreen() {
       <Pressable
         style={globalStyle.btnFooter}
         onPress={() => router.navigate("/meus-pedidos")}
+        accessibilityRole="button"
+        accessibilityLabel="Ir para Pedidos"
       >
         <Image source={require("@/assets/images/img/pedido.png")} />
         <Text
@@ -73,6 +81,8 @@ export default function FooterScreen() {
       <Pressable
         style={globalStyle.btnFooter}
         onPress={() => router.navigate("/configuracao")}
+        accessibilityRole="button"
+        accessibilityLabel="Ir para Configurações"
       >
         <Image source={require("@/assets/images/img/config.png")} />
         <Text

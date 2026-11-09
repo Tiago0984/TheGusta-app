@@ -5,7 +5,6 @@ import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useRef, useState } from "react";
 import {
-  Alert,
   Image,
   ImageBackground,
   Modal,
@@ -19,9 +18,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { cores } from "@/styles/variaveis";
 
-import { IMAGEM } from "@/config/api";
 import { useCliente } from "@/hooks/use-cliente";
 import { salvarDadosPerfil } from "@/services/cliente";
+import { enviarFotoPerfil } from "@/services/foto-perfil";
 import type { Cliente } from "@/types/cliente";
 
 // Converte a data do banco (aaaa-mm-dd) para dd/mm/aaaa
@@ -77,7 +76,7 @@ function mascaraTelefone(texto: string) {
 }
 
 export default function EditarPerfilScreen() {
-  const { cliente, carregando, erro, atualizarCliente } = useCliente();
+  const { cliente, fotoUrl, carregando, erro, atualizarCliente } = useCliente();
 
   if (!cliente) {
     return (
@@ -107,6 +106,7 @@ export default function EditarPerfilScreen() {
     <EditarPerfilFormulario
       key={cliente.id_cliente}
       cliente={cliente}
+      fotoUrl={fotoUrl}
       erroCarregamento={erro}
       tentarNovamente={atualizarCliente}
     />
@@ -114,67 +114,76 @@ export default function EditarPerfilScreen() {
 }
 
 // O formulário inicia uma vez por cliente; atualizações de foto/foco não apagam a edição.
-function EditarPerfilFormulario({ cliente, erroCarregamento, tentarNovamente }: {
+function EditarPerfilFormulario({ cliente, fotoUrl, erroCarregamento, tentarNovamente }: {
   cliente: Cliente;
+  fotoUrl: string | null;
   erroCarregamento: string;
   tentarNovamente: () => Promise<void>;
 }) {
   const [notificacoesAtivas, setNotificacoesAtivas] = useState(true);
 
   const [modalFoto, setModalFoto] = useState(false);
-  const [imagem, setImagem] = useState<string | null>(null);
+  const [imagem, setImagem] = useState<ImagePicker.ImagePickerAsset | null>(null);
+  const [enviandoFoto, setEnviandoFoto] = useState(false);
+  const [mensagemFoto, setMensagemFoto] = useState("");
+  const [sucessoFoto, setSucessoFoto] = useState(false);
+  const fotoPendente = useRef<object | null>(null);
+  const [fotoClienteErro, setFotoClienteErro] = useState<string | null>(null);
 
   // Abre o modal para escolher entre câmera e galeria
   const escolherFoto = () => {
+    if (fotoPendente.current) return;
     setModalFoto(true);
   };
 
-  // Abre a câmera (precisa de permissão, menos no navegador)
-  const tirarFoto = async () => {
+  async function selecionarFoto(origem: "camera" | "galeria") {
+    if (fotoPendente.current) return;
+    const operacao = {};
     setModalFoto(false);
-
+    setMensagemFoto("");
+    setSucessoFoto(false);
+    // Na web, cancelar o seletor pode não resolver a promessa. Não bloqueie uma nova seleção.
     if (Platform.OS !== "web") {
-      const permissao = await ImagePicker.requestCameraPermissionsAsync();
-
-      if (!permissao.granted) {
-        Alert.alert(
-          "Permissão necessária",
-          "É necessário permitir o acesso à câmera.",
-        );
-        return;
+      fotoPendente.current = operacao;
+    }
+    try {
+      if (origem === "camera" && Platform.OS !== "web") {
+        const permissao = await ImagePicker.requestCameraPermissionsAsync();
+        if (!permissao.granted) throw new Error("É necessário permitir o acesso à câmera.");
+      }
+      const opcoes: ImagePicker.ImagePickerOptions = {
+        mediaTypes: ["images"], allowsEditing: true, aspect: [1, 1], quality: origem === "camera" ? 0.7 : 1,
+      };
+      const resultado = await (origem === "camera"
+        ? ImagePicker.launchCameraAsync(opcoes)
+        : ImagePicker.launchImageLibraryAsync(opcoes));
+      if (resultado.canceled) return;
+      const foto = resultado.assets[0];
+      if (!foto) throw new Error("Não foi possível ler a imagem selecionada.");
+      if (Platform.OS === "web") {
+        if (fotoPendente.current) return;
+        fotoPendente.current = operacao;
+      }
+      setImagem(foto);
+      setEnviandoFoto(true);
+      await enviarFotoPerfil(foto, cliente.id_cliente);
+      setFotoClienteErro(null);
+      setSucessoFoto(true);
+      setMensagemFoto("Foto atualizada com sucesso.");
+    } catch (erroFoto) {
+      if (fotoPendente.current && fotoPendente.current !== operacao) return;
+      setSucessoFoto(false);
+      setMensagemFoto(erroFoto instanceof Error ? erroFoto.message : "Não foi possível atualizar sua foto.");
+    } finally {
+      if (fotoPendente.current === operacao) {
+        fotoPendente.current = null;
+        setImagem(null);
+        setEnviandoFoto(false);
       }
     }
-
-    const resultado = await ImagePicker.launchCameraAsync({
-      mediaTypes: ["images"],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!resultado.canceled) {
-      setImagem(resultado.assets[0].uri);
-    }
-  };
-
-  // Abre a galeria (não precisa de permissão)
-  const selecionarGaleria = async () => {
-    setModalFoto(false);
-
-    const resultado = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!resultado.canceled) {
-      setImagem(resultado.assets[0].uri);
-    }
-  };
+  }
 
   // Dados do cliente carregados da API (Editar perfil)
-  const [fotoClienteErro, setFotoClienteErro] = useState<string | null>(null);
   const [nome, setNome] = useState(cliente.nome_cliente ?? "");
   const [email, setEmail] = useState(cliente.email_cliente ?? "");
   const [telefone, setTelefone] = useState(mascaraTelefone(cliente.telefone_cliente ?? ""));
@@ -359,12 +368,13 @@ function EditarPerfilFormulario({ cliente, erroCarregamento, tentarNovamente }: 
                         style={editarPerfilStyle.imgPerfil}
                         source={
                           imagem
-                            ? { uri: imagem }
-                            : cliente?.foto_cliente && fotoClienteErro !== cliente.foto_cliente
-                              ? { uri: `${IMAGEM}/${cliente.foto_cliente}` }
+                            ? { uri: imagem.uri }
+                            : fotoUrl && fotoClienteErro !== fotoUrl
+                              ? { uri: fotoUrl }
                               : require("@/assets/images/img/user.png")
                         }
-                        onError={() => setFotoClienteErro(cliente.foto_cliente)}
+                        onError={() => { if (!imagem) setFotoClienteErro(fotoUrl); }}
+                        accessibilityLabel="Foto do perfil"
                       />
                     </View>
                     <View style={editarPerfilStyle.textoFoto}>
@@ -379,12 +389,26 @@ function EditarPerfilFormulario({ cliente, erroCarregamento, tentarNovamente }: 
                   <Pressable
                     style={editarPerfilStyle.btnAdicionarFoto}
                     onPress={escolherFoto}
+                    disabled={enviandoFoto}
+                    accessibilityRole="button"
+                    accessibilityLabel="Alterar foto do perfil"
+                    aria-busy={enviandoFoto}
                   >
                     <Text style={editarPerfilStyle.txtAdicionarFoto}>
-                      Adicionar foto
+                      {enviandoFoto ? "Enviando..." : cliente.foto_cliente ? "Alterar foto" : "Adicionar foto"}
                     </Text>
                   </Pressable>
                 </View>
+
+                {mensagemFoto ? (
+                  <Text
+                    style={sucessoFoto ? editarPerfilStyle.txtSucesso : editarPerfilStyle.txtMensagemErro}
+                    accessibilityRole={sucessoFoto ? undefined : "alert"}
+                    aria-live="polite"
+                  >
+                    {mensagemFoto}
+                  </Text>
+                ) : null}
 
                 <View style={editarPerfilStyle.cardFormulario}>
                   <View style={editarPerfilStyle.campo}>
@@ -581,7 +605,10 @@ function EditarPerfilFormulario({ cliente, erroCarregamento, tentarNovamente }: 
 
                 <Pressable
                   style={editarPerfilStyle.btnModal}
-                  onPress={tirarFoto}
+                  onPress={() => { void selecionarFoto("camera"); }}
+                  disabled={enviandoFoto}
+                  accessibilityRole="button"
+                  accessibilityLabel="Tirar foto do perfil"
                 >
                   <Text style={editarPerfilStyle.txtBtnModal}>
                     📷 Tirar foto
@@ -590,7 +617,10 @@ function EditarPerfilFormulario({ cliente, erroCarregamento, tentarNovamente }: 
 
                 <Pressable
                   style={editarPerfilStyle.btnModal}
-                  onPress={selecionarGaleria}
+                  onPress={() => { void selecionarFoto("galeria"); }}
+                  disabled={enviandoFoto}
+                  accessibilityRole="button"
+                  accessibilityLabel="Escolher foto da galeria"
                 >
                   <Text style={editarPerfilStyle.txtBtnModal}>
                     🖼️ Escolher da galeria

@@ -16,6 +16,8 @@ import homeStyle from "@/styles/homeStyle";
 import { cores } from "@/styles/variaveis";
 import FooterScreen from "@/app/footer";
 import { useCliente } from "@/hooks/use-cliente";
+import { useFavoritos } from "@/hooks/use-favoritos";
+import { BotaoFavorito, MensagemFavoritos } from "@/components/favoritos";
 
 import { IMAGEM } from "@/config/api";
 import {
@@ -23,18 +25,22 @@ import {
   getBanners,
   getCategorias,
   getProdutos,
+  type Banner,
+  type Categoria,
+  type Produto,
 } from "@/services/api";
 
 export default function HomeScreen() {
-  const { cliente, erro: erroCliente, atualizarCliente } = useCliente();
+  const { cliente, fotoUrl, erro: erroCliente, atualizarCliente } = useCliente();
+  const { erro: erroFavoritos, atualizarFavoritos } = useFavoritos();
   const [fotoClienteErro, setFotoClienteErro] = useState<string | null>(null);
-  const [produtos, setProdutos] = useState<any[]>([]);
-  const [categorias, setCategorias] = useState<any[]>([]);
-  const [banners, setBanners] = useState<any[]>([]);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [banners, setBanners] = useState<Banner[]>([]);
   const [bannerSemImagem, setBannerSemImagem] = useState<number[]>([]);
   const [larguraBanner, setLarguraBanner] = useState(0);
 
-  const [produtosEmDestaque, setProdutosEmDestaque] = useState<any[]>([]);
+  const produtosEmDestaque = produtos.filter((produto) => produto.destaque_produto === "SIM");
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
 
@@ -47,16 +53,8 @@ export default function HomeScreen() {
       ]);
       setErro("");
 
-      const produtosAtivos = produtosData
-        .filter((produto) => produto.status_produto === "ATIVO")
-        .map((produto) => ({
-          ...produto,
-          favorito: false,
-        }));
+      const produtosAtivos = produtosData.filter((produto) => produto.status_produto === "ATIVO");
       setProdutos(produtosAtivos);
-      setProdutosEmDestaque(
-        produtosAtivos.filter((produto) => produto.destaque_produto === "SIM"),
-      );
 
       // A API já devolve as categorias em ordem alfabética
       const categoriasAtivas = categoriasData.filter(
@@ -116,7 +114,7 @@ export default function HomeScreen() {
   const categoriasComProdutos = categorias.filter((categoria) =>
     produtos.some(
       (produto) =>
-        produto.categoria_produto.id_categoria === categoria.id_categoria,
+        Number(produto.id_categoria) === Number(categoria.id_categoria),
     ),
   );
 
@@ -166,16 +164,6 @@ export default function HomeScreen() {
 
   // ]);
 
-  function alterarFavorito(id: number) {
-    setProdutosEmDestaque((produtoFavorito) =>
-      produtoFavorito.map((produto) =>
-        produto.id_produto === id
-          ? { ...produto, favorito: !produto.favorito }
-          : produto,
-      ),
-    );
-  }
-
   return (
     <View style={globalStyle.container}>
       <ImageBackground
@@ -199,11 +187,12 @@ export default function HomeScreen() {
                   <Image
                     style={homeStyle.perfil}
                     source={
-                      cliente?.foto_cliente && fotoClienteErro !== cliente.foto_cliente
-                        ? { uri: `${IMAGEM}/${cliente.foto_cliente}` }
+                      fotoUrl && fotoClienteErro !== fotoUrl
+                        ? { uri: fotoUrl }
                         : require("@/assets/images/img/user.png")
                     }
-                    onError={() => setFotoClienteErro(cliente?.foto_cliente ?? null)}
+                    onError={() => setFotoClienteErro(fotoUrl)}
+                    accessibilityLabel="Foto do perfil"
                   />
                 </View>
               </View>
@@ -322,6 +311,7 @@ export default function HomeScreen() {
                       ))}
                     </View>
 
+                    <MensagemFavoritos erro={erroFavoritos} tentarNovamente={atualizarFavoritos} />
                     <View style={homeStyle.destaque}>
                       <Text style={homeStyle.tituloSecao}>Destaques</Text>
                       {produtosEmDestaque.length > 0 ? (
@@ -342,9 +332,7 @@ export default function HomeScreen() {
                                   source={
                                     semImagem.includes(produto.id_produto) ||
                                     !produto.foto_produto
-                                      ? {
-                                          uri: `${IMAGEM}/produto/sem-imagem.png`,
-                                        }
+                                      ? require("@/assets/images/img/sem-imagem.png")
                                       : {
                                           uri: `${IMAGEM}/${produto.foto_produto}`,
                                         }
@@ -356,16 +344,7 @@ export default function HomeScreen() {
                                     ]);
                                   }}
                                 />
-                                <Pressable
-                                  style={homeStyle.btnFavorito}
-                                  onPress={() =>
-                                    alterarFavorito(produto.id_produto)
-                                  }
-                                >
-                                  <Text style={homeStyle.txtFavorito}>
-                                    {produto.favorito ? "★" : "☆"}
-                                  </Text>
-                                </Pressable>
+                                <BotaoFavorito idProduto={produto.id_produto} nomeProduto={produto.nome_produto} estiloBotao={homeStyle.btnFavorito} estiloTexto={homeStyle.txtFavorito} />
                               </View>
                               <View style={homeStyle.infoDestaque}>
                                 <Text style={homeStyle.txtDestaque}>
@@ -388,6 +367,8 @@ export default function HomeScreen() {
                                   </Text>
                                   <Pressable
                                     style={homeStyle.btnDetalhes}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Ver detalhes: ${produto.nome_produto}`}
                                     onPress={() =>
                                       router.push({
                                         pathname: "/detalhe-produto",
